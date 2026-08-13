@@ -1,8 +1,8 @@
 export type DshCreateRequest = {
-  action: 'create'; projectId: string; rootId: string; prompt: string; count: number;
+  action: 'create'; projectId: string; rootId: string; nodeIds: string[]; prompt: string; count: number;
 };
 export type DshBranchRequest = {
-  action: 'branch'; projectId: string; nodeId: string; nodeTitle: string; prompt: string; count: number;
+  action: 'branch'; projectId: string; nodeId: string; nodeIds: string[]; nodeTitle: string; prompt: string; count: number;
 };
 type DshRequest = DshCreateRequest | DshBranchRequest;
 

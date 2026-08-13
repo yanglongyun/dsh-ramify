@@ -14,6 +14,7 @@ type CreateRequest = {
   action: 'create'
   projectId: string
   rootId: string
+  nodeIds: string[]
   prompt: string
   count: number
 }
@@ -25,6 +26,7 @@ type BranchRequest = {
   action: 'branch'
   projectId: string
   nodeId: string
+  nodeIds: string[]
   nodeTitle: string
   prompt: string
   count: number
@@ -38,10 +40,12 @@ export function bridgeRequest(value: unknown): CreateRequest | BranchRequest | n
   if (!Number.isInteger(row.count) || Number(row.count) < 1 || Number(row.count) > 5) return null
   if (row.action === 'create') {
     if (typeof row.projectId !== 'string' || typeof row.rootId !== 'string') return null
+    if (!Array.isArray(row.nodeIds) || row.nodeIds.length !== row.count || !row.nodeIds.every((id) => typeof id === 'string')) return null
     return row as CreateRequest
   }
   if (row.action !== 'branch') return null
   if (typeof row.projectId !== 'string' || typeof row.nodeId !== 'string' || typeof row.nodeTitle !== 'string') return null
+  if (!Array.isArray(row.nodeIds) || row.nodeIds.length !== row.count || !row.nodeIds.every((id) => typeof id === 'string')) return null
   return row as BranchRequest
 }
 
@@ -51,15 +55,18 @@ export function promptFor(request: CreateRequest | BranchRequest): string {
       `请继续完成已创建的 Ramify 项目 ${request.projectId}。`,
       `根节点是 ${request.rootId}，不要再次创建项目。`,
       `完整需求：${request.prompt.trim()}`,
-      `请以根节点为父节点生成 ${request.count} 个方向不同的方案，并把每个方案完整写入 Ramify 节点。`,
+      `画布已经创建了 ${request.count} 个生成中占位节点：${request.nodeIds.join('、')}。`,
+      '请为每个占位节点确定一个明显不同的方向，并直接使用 ramify_node_complete 完整写入对应节点。',
+      '不要新建项目，不要新建额外方案节点，也不要删除这些占位节点。',
       '完成后不要输出本地服务地址；Ramify 工作台会自动更新。',
     ].join('\n')
   }
   return [
     `请继续编辑 Ramify 项目 ${request.projectId}。`,
-    `以节点 ${request.nodeId}（${request.nodeTitle}）为父节点创建 ${request.count} 个新分支。`,
+    `父节点是 ${request.nodeId}（${request.nodeTitle}）。`,
+    `画布已经创建了 ${request.count} 个分支占位节点：${request.nodeIds.join('、')}。`,
     `修改要求：${request.prompt.trim()}`,
-    '先读取项目树确认节点，再生成并完整写入这些子节点。保留原节点，不要覆盖旧方案。',
+    '先读取项目树确认节点，再直接使用 ramify_node_complete 完整写入这些占位节点。不要再创建节点，保留原节点。',
   ].join('\n')
 }
 

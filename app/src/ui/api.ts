@@ -20,9 +20,17 @@ export const api = {
     method: 'PUT', body: JSON.stringify({ locale }),
   }),
   listProjects: () => req<Project[]>('/api/projects'),
-  createProject: (prompt: string) => req<CreatedProject>('/api/projects', {
-    method: 'POST', body: JSON.stringify({ prompt }),
+  createProject: (prompt: string, count: number) => req<CreatedProject>('/api/projects', {
+    method: 'POST', body: JSON.stringify({ prompt, count }),
   }),
+  createPlaceholders: (projectId: string, parentId: string, count: number) =>
+    req<{ nodes: Array<{ key: string; id: string }> }>(`/api/projects/${projectId}/nodes/batch`, {
+      method: 'POST',
+      body: JSON.stringify({ nodes: Array.from({ length: count }, (_, index) => ({
+        key: `branch-${index + 1}`, parentId,
+        title: `分支 ${index + 1}（生成中）`, artifactType: 'html',
+      })) }),
+    }),
   deleteProject: (id: string) => req<{ ok: true }>(`/api/projects/${id}`, { method: 'DELETE' }),
   markNodeError: (id: string, error: string) => req<{ ok: true }>(`/api/nodes/${id}/artifact/error`, { method: 'PUT', body: JSON.stringify({ error }) }),
   tree: (id: string) => req<Tree>(`/api/projects/${id}/tree`),

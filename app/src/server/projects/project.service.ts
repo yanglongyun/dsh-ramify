@@ -7,7 +7,7 @@ import { ProjectRepository } from './project.repository.js';
 import type { Project } from './project.types.js';
 import { isArtifactType } from '../../shared/types.js';
 
-type CreatedProject = Project & { rootId: string };
+type CreatedProject = Project & { rootId: string; nodeIds: string[] };
 
 export class ProjectService {
   constructor(
@@ -28,14 +28,25 @@ export class ProjectService {
       : prompt.slice(0, 20);
     const projectId = createId();
     const rootId = createId();
+    const count = input.count === undefined ? 0 : Number(input.count);
+    if (!Number.isInteger(count) || count < 0 || count > 5) {
+      throw new HttpError(400, 'count must be an integer between 0 and 5', 'INVALID_COUNT');
+    }
+    const nodeIds = Array.from({ length: count }, () => createId());
 
     transaction(() => {
       this.projects.insert({ id: projectId, title, prompt });
       this.nodes.insertRoot(rootId, projectId, prompt);
+      nodeIds.forEach((id, position) => {
+        this.nodes.insert({
+          id, projectId, parentId: rootId, position, type: 'html',
+          title: `方案 ${position + 1}（生成中）`, content: null,
+        });
+      });
     });
 
     projectEvents.publish(projectId);
-    return { ...this.requireProject(projectId), rootId };
+    return { ...this.requireProject(projectId), rootId, nodeIds };
   }
 
   rename(projectId: string, input: Record<string, unknown>) {

@@ -45,10 +45,13 @@ export function ProjectList() {
     setCreating(true);
     setSubmitError('');
     try {
-      const project = await api.createProject(value);
+      const project = await api.createProject(value, count);
       setPrompt('');
       navigate(`/projects/${project.id}`);
-      await submitToDsh({ action: 'create', projectId: project.id, rootId: project.rootId, prompt: value, count });
+      await submitToDsh({
+        action: 'create', projectId: project.id, rootId: project.rootId,
+        nodeIds: project.nodeIds, prompt: value, count,
+      });
     } catch {
       setSubmitError(t('dsh.noSession'));
     } finally {

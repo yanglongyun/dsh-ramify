@@ -2136,12 +2136,28 @@ var ProjectService = class {
     const title = typeof input.title === "string" && input.title.trim() ? input.title.trim() : prompt.slice(0, 20);
     const projectId = createId();
     const rootId = createId();
+    const count = input.count === void 0 ? 0 : Number(input.count);
+    if (!Number.isInteger(count) || count < 0 || count > 5) {
+      throw new HttpError(400, "count must be an integer between 0 and 5", "INVALID_COUNT");
+    }
+    const nodeIds = Array.from({ length: count }, () => createId());
     transaction(() => {
       this.projects.insert({ id: projectId, title, prompt });
       this.nodes.insertRoot(rootId, projectId, prompt);
+      nodeIds.forEach((id, position) => {
+        this.nodes.insert({
+          id,
+          projectId,
+          parentId: rootId,
+          position,
+          type: "html",
+          title: `\u65B9\u6848 ${position + 1}\uFF08\u751F\u6210\u4E2D\uFF09`,
+          content: null
+        });
+      });
     });
     projectEvents.publish(projectId);
-    return { ...this.requireProject(projectId), rootId };
+    return { ...this.requireProject(projectId), rootId, nodeIds };
   }
   rename(projectId, input) {
     this.requireProject(projectId);

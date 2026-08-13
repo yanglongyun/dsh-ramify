@@ -8,6 +8,7 @@ type CreateRequest = {
     action: 'create';
     projectId: string;
     rootId: string;
+    nodeIds: string[];
     prompt: string;
     count: number;
 };
@@ -18,6 +19,7 @@ type BranchRequest = {
     action: 'branch';
     projectId: string;
     nodeId: string;
+    nodeIds: string[];
     nodeTitle: string;
     prompt: string;
     count: number;

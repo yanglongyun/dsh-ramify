@@ -19,6 +19,15 @@ const artifacts = new ArtifactStore();
 const projectService = new ProjectService(projects, nodes, artifacts);
 const nodeService = new NodeService(nodes, projects, artifacts);
 
+test('creates the requested generating placeholders before opening a project', () => {
+  const project = projectService.create({ prompt: '三套方案', count: 3 });
+  assert.equal(project.nodeIds.length, 3);
+  const tree = projectService.tree(project.id).nodes;
+  assert.equal(tree.length, 4);
+  assert.deepEqual(tree.slice(1).map((node) => [node.id, node.type, node.content]),
+    project.nodeIds.map((id) => [id, 'html', null]));
+});
+
 test('models an ordered tree of titled nodes with optional content and artifacts', () => {
   const project = projectService.create({ prompt: '测试需求' });
   const root = nodes.find(project.rootId)!;

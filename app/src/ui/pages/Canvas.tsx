@@ -178,14 +178,19 @@ export default function Canvas() {
     setBubbleOpen(true);
   }
 
-  function submitBranch(prompt: string, count: number) {
+  async function submitBranch(prompt: string, count: number) {
     if (!selectedId) return;
     const parent = byId.get(selectedId);
     if (!parent) return;
     setBubbleOpen(false);
-    void submitToDsh({ action: 'branch', projectId, nodeId: parent.id, nodeTitle: parent.title, prompt, count })
-      .then(() => showToast(t('dsh.accepted')))
-      .catch(() => showToast(t('dsh.noSession')));
+    try {
+      const placeholders = await api.createPlaceholders(projectId, parent.id, count);
+      const nodeIds = placeholders.nodes.map((node) => node.id);
+      await submitToDsh({ action: 'branch', projectId, nodeId: parent.id, nodeIds, nodeTitle: parent.title, prompt, count });
+      showToast(t('dsh.accepted'));
+    } catch {
+      showToast(t('dsh.noSession'));
+    }
   }
 
   const doneCount = nodes.filter((node) => isArtifactType(node.type) && node.content).length;

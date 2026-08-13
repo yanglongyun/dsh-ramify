@@ -14,7 +14,7 @@ export type Project = {
   preview_node_id?: Id | null;
 };
 
-export type CreatedProject = Project & { rootId: Id };
+export type CreatedProject = Project & { rootId: Id; nodeIds: Id[] };
 
 export type TreeNode = {
   seq: number;
