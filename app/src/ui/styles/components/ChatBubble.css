@@ -3,8 +3,8 @@
 .cb-branch-panel::before { content: ''; position: absolute; left: -7px; top: var(--arrow-top, 44px); width: 12px; height: 12px; background: var(--panel); border-left: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); transform: rotate(45deg); }
 .cb-branch-head { font-size: 11.5px; color: var(--ink-3); margin-bottom: 10px; }
 .cb-branch-head b { color: var(--ink-2); }
-.cb-branch-panel textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font-size: 12.5px; line-height: 1.5; resize: vertical; height: 92px; min-height: 64px; max-height: 220px; outline: none; background: var(--panel-2); color: var(--ink); transition: border-color .12s, background .12s; }
-.cb-branch-panel textarea:focus { border-color: var(--accent); background: #fff; }
+.cb-branch-panel textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font-size: 12.5px; line-height: 1.5; resize: vertical; height: 92px; min-height: 64px; max-height: 220px; outline: none; background: var(--panel-2); color: var(--ink); caret-color: var(--accent); transition: border-color .12s, background .12s; }
+.cb-branch-panel textarea:focus { border-color: var(--accent); background: var(--panel); }
 .cb-branch-panel textarea::placeholder { color: var(--ink-3); }
 .cb-branch-row { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin: 10px 0; }
 .cb-branch-row .cb-count-picker { display: flex; }
