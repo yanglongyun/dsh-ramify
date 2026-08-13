@@ -28,33 +28,7 @@ const CSS = String.raw`
   justify-content: center;
   padding: 0;
 }
-.ramify-entry__mark {
-  position: relative;
-  width: 18px;
-  height: 20px;
-  flex: none;
-}
-.ramify-entry__stem {
-  position: absolute;
-  left: 8px;
-  top: 5px;
-  width: 1.5px;
-  height: 14px;
-  border-radius: 1px;
-  background: currentColor;
-  transform: rotate(-5deg);
-  transform-origin: bottom;
-}
-.ramify-entry__leaf {
-  position: absolute;
-  width: 7px;
-  height: 4px;
-  border: 1.4px solid currentColor;
-  border-radius: 90% 10% 90% 10%;
-  background: var(--dsw-specific-sidebar-fill, #f7f6f2);
-}
-.ramify-entry__leaf--left { left: 1px; top: 4px; transform: rotate(24deg); }
-.ramify-entry__leaf--right { left: 9px; top: 1px; transform: rotate(-16deg) scaleX(-1); }
+.ramify-brand-mark { display: block; flex: none; }
 .ramify-entry__label {
   min-width: 0;
   overflow: hidden;
@@ -264,7 +238,7 @@ const CSS = String.raw`
   font-size: 14px;
   letter-spacing: .04em;
 }
-.ramify-loading__sprout { display: block; margin: 0 auto 10px; animation: ramify-breathe 1.8s ease-in-out infinite; }
+.ramify-loading__sprout { width: 30px; display: block; margin: 0 auto 10px; color: #4f6245; animation: ramify-breathe 1.8s ease-in-out infinite; }
 @keyframes ramify-veil-in { from { opacity: 0; } }
 @keyframes ramify-shell-in { from { opacity: 0; transform: translateY(10px) scale(.99); } }
 @keyframes ramify-breathe { 50% { transform: translateY(-3px); opacity: .65; } }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import type { ToolCallViewProps } from '@deepseek-ai/dsh-client-ui-tool/client'
 import { setRamifyWorkspaceOpen } from './store.js'
+import { RamifyBrandMark } from './RamifyBrandMark.js'
 
 export function shouldAutoOpenRamifyProject(wasRunning: boolean, settled: boolean, failed: boolean): boolean {
   return wasRunning && settled && !failed
@@ -30,11 +31,7 @@ export function RamifyProjectToolCard({ block }: ToolCallViewProps): ReactNode {
   return (
     <div className="ramify-tool" data-state={failed ? 'error' : settled ? 'done' : 'running'}>
       <span className="ramify-tool__seal" aria-hidden="true">
-        <span className="ramify-entry__mark">
-          <span className="ramify-entry__stem" />
-          <span className="ramify-entry__leaf ramify-entry__leaf--left" />
-          <span className="ramify-entry__leaf ramify-entry__leaf--right" />
-        </span>
+        <RamifyBrandMark size={20} />
       </span>
       <span className="ramify-tool__copy">
         <strong>{failed ? 'Ramify 项目创建失败' : settled ? 'Ramify 项目已就绪' : '正在创建 Ramify 项目'}</strong>

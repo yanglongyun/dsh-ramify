@@ -5,18 +5,9 @@ import {
   setRamifyWorkspaceOpen,
   subscribeRamifyWorkspace,
 } from './store.js'
+import { RamifyBrandMark } from './RamifyBrandMark.js'
 
 const RAMIFY_URL = 'http://127.0.0.1:9519/'
-
-function SproutMark(): ReactNode {
-  return (
-    <span className="ramify-entry__mark" aria-hidden="true">
-      <span className="ramify-entry__stem" />
-      <span className="ramify-entry__leaf ramify-entry__leaf--left" />
-      <span className="ramify-entry__leaf ramify-entry__leaf--right" />
-    </span>
-  )
-}
 
 /** Additive action rendered above Settings in the DSH sidebar. */
 export function RamifySidebarAction({ wide }: { readonly wide: boolean }): ReactNode {
@@ -28,7 +19,7 @@ export function RamifySidebarAction({ wide }: { readonly wide: boolean }): React
       title={wide ? undefined : 'Ramify'}
       onClick={() => { setRamifyWorkspaceOpen(true) }}
     >
-      <SproutMark />
+      <RamifyBrandMark size={20} />
       {wide ? <span className="ramify-entry__label">Ramify</span> : null}
     </button>
   )
@@ -72,7 +63,7 @@ export function RamifyWorkspaceOverlay(): ReactNode {
       <section className="ramify-shell">
         <header className="ramify-bar">
           <div className="ramify-brand">
-            <span className="ramify-brand__seal"><SproutMark /></span>
+            <span className="ramify-brand__seal"><RamifyBrandMark size={18} /></span>
             <strong className="ramify-brand__name" id="ramify-workspace-title">Ramify</strong>
             <span className="ramify-brand__meta">creative branching workspace</span>
           </div>
@@ -92,7 +83,7 @@ export function RamifyWorkspaceOverlay(): ReactNode {
         <div className="ramify-stage">
           {!ready ? (
             <div className="ramify-loading">
-              <span><span className="ramify-loading__sprout">🌱</span>枝叶正在展开</span>
+              <span><span className="ramify-loading__sprout"><RamifyBrandMark size={30} /></span>枝叶正在展开</span>
             </div>
           ) : null}
           <iframe
