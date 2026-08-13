@@ -115,37 +115,39 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
     order: 160,
     text: [
       'Use Ramify when the user wants multiple creative directions, visual comparison, or branching revisions.',
-      'Create the project first, return its focused URL early, batch-create a balanced tree of titled placeholders, then complete nodes incrementally.',
+      'Create the project first, tell the user it is available from the Ramify entry in the DSH sidebar, batch-create a balanced tree of titled placeholders, then complete nodes incrementally.',
       'Preserve alternatives: meaningful revisions become child nodes; later rounds belong under a titled round node instead of flattening every version under one parent.',
       'Ramify is a local presentation and versioning surface. You remain responsible for authoring every artifact.',
+      'Never present the loopback Ramify service URL as the primary result. The integrated DSH workspace is the primary UI; the standalone URL is only an implementation detail and optional fallback.',
     ].join(' '),
   })
 
   ctx.tools.register(defineTool({
     name: 'ramify_start',
-    description: 'Start or connect to the local Ramify creative canvas and return its URL.',
+    description: 'Start or connect to the Ramify workspace embedded in DeepSeek Harness.',
     parameters: {},
     output: {
       schema: {
         type: 'object',
         additionalProperties: false,
         properties: {
-          url: { type: 'string', required: true },
+          ready: { type: 'boolean', required: true },
           reused: { type: 'boolean', required: true },
           version: { type: 'string', required: true },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: `Ramify canvas: ${value.url}` }],
+      render: () => [{ type: 'text', text: 'Ramify is ready in the DSH sidebar.' }],
     },
     async execute() {
-      return runtime.start()
+      const status = await runtime.start()
+      return { ready: true, reused: status.reused, version: status.version }
     },
     presentCall: () => ({ card: 'generic', title: 'Open Ramify', kind: 'other' }),
   }))
 
   ctx.tools.register(defineTool({
     name: 'ramify_project_create',
-    description: 'Create a Ramify project and root node before generating alternative directions. Return the focused canvas URL immediately to the user.',
+    description: 'Create a Ramify project and root node before generating alternative directions. Tell the user to open the integrated Ramify workspace from the DSH sidebar.',
     parameters: {
       prompt: { type: 'string', required: true, description: 'The complete creative request represented by this project.' },
       title: { type: 'string', description: 'Optional concise project title.' },
@@ -158,10 +160,9 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
           projectId: { type: 'string', required: true },
           rootId: { type: 'string', required: true },
           title: { type: 'string', required: true },
-          url: { type: 'string', required: true },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: `Created Ramify project “${value.title}”: ${value.url}` }],
+      render: (_args, value) => [{ type: 'text', text: `Created Ramify project “${value.title}”. Open Ramify from the DSH sidebar to view it.` }],
     },
     async execute(args, exec) {
       const value = objectValue(await runtime.request('/api/projects', {
@@ -173,7 +174,6 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
         projectId,
         rootId: stringValue(value, 'rootId', 'project creation'),
         title: stringValue(value, 'title', 'project creation'),
-        url: runtime.projectUrl(projectId),
       }
     },
     presentCall: args => ({ card: 'generic', title: args.title ?? 'Create Ramify project', kind: 'edit', rawInput: args }),
@@ -232,7 +232,6 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
               },
             },
           },
-          url: { type: 'string', required: true },
         },
       },
       render: (_args, value) => renderJson(value),
@@ -250,7 +249,6 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
             artifact_revision: stringValue(record, 'artifact_revision', 'tree read'),
           }
         }),
-        url: runtime.projectUrl(args.projectId),
       }
     },
     presentCall: args => ({ card: 'generic', title: 'Read Ramify tree', kind: 'read', rawInput: args }),
@@ -274,10 +272,9 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
         additionalProperties: false,
         properties: {
           id: { type: 'string', required: true },
-          url: { type: 'string', required: true },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: `Created Ramify node ${value.id}: ${value.url}` }],
+      render: (_args, value) => [{ type: 'text', text: `Created Ramify node ${value.id}. The integrated workspace updates automatically.` }],
     },
     async execute(args, exec) {
       const result = objectValue(await runtime.request(`/api/projects/${encodeURIComponent(args.projectId)}/nodes`, {
@@ -291,7 +288,7 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
           ...(args.artifact === undefined ? {} : { artifact: args.artifact }),
         }),
       }, exec.signal), 'node creation')
-      return { id: stringValue(result, 'id', 'node creation'), url: runtime.projectUrl(args.projectId) }
+      return { id: stringValue(result, 'id', 'node creation') }
     },
     presentCall: args => ({ card: 'generic', title: args.title, kind: 'edit', rawInput: args }),
   }))
@@ -337,10 +334,9 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
               },
             },
           },
-          url: { type: 'string', required: true },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: `Created ${value.nodes.length} Ramify nodes: ${value.url}` }],
+      render: (_args, value) => [{ type: 'text', text: `Created ${value.nodes.length} Ramify nodes. The integrated workspace updates automatically.` }],
     },
     async execute(args, exec) {
       const result = objectValue(await runtime.request(`/api/projects/${encodeURIComponent(args.projectId)}/nodes/batch`, {
@@ -357,7 +353,6 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
             id: stringValue(node, 'id', 'batch node creation'),
           }
         }),
-        url: runtime.projectUrl(args.projectId),
       }
     },
     presentCall: args => ({ card: 'generic', title: `Create ${args.nodes.length} Ramify nodes`, kind: 'edit', rawInput: args.nodes }),
@@ -380,10 +375,9 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
         properties: {
           ok: { type: 'boolean', required: true },
           nodeId: { type: 'string', required: true },
-          url: { type: 'string', required: true },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: `Completed Ramify node ${value.nodeId}: ${value.url}` }],
+      render: (_args, value) => [{ type: 'text', text: `Completed Ramify node ${value.nodeId}. The integrated workspace updates automatically.` }],
     },
     async execute(args, exec) {
       await runtime.request(`/api/nodes/${encodeURIComponent(args.nodeId)}/artifact`, {
@@ -394,7 +388,7 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
           ...(args.expectedUpdatedAt === undefined ? {} : { expectedUpdatedAt: args.expectedUpdatedAt }),
         }),
       }, exec.signal)
-      return { ok: true, nodeId: args.nodeId, url: runtime.projectUrl(args.projectId) }
+      return { ok: true, nodeId: args.nodeId }
     },
     presentCall: args => ({ card: 'generic', title: `Complete ${args.artifactType} node`, kind: 'edit', rawInput: { nodeId: args.nodeId } }),
   }))
@@ -417,10 +411,9 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
         additionalProperties: false,
         properties: {
           node: { ...NODE_SCHEMA, required: true },
-          url: { type: 'string', required: true },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: `Updated Ramify node ${value.node.id}: ${value.url}` }],
+      render: (_args, value) => [{ type: 'text', text: `Updated Ramify node ${value.node.id}. The integrated workspace updates automatically.` }],
     },
     async execute(args, exec) {
       const node = await runtime.request(`/api/nodes/${encodeURIComponent(args.nodeId)}`, {
@@ -433,7 +426,7 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
           ...(args.expectedUpdatedAt === undefined ? {} : { expectedUpdatedAt: args.expectedUpdatedAt }),
         }),
       }, exec.signal)
-      return { node: nodeValue(node, 'node update'), url: runtime.projectUrl(args.projectId) }
+      return { node: nodeValue(node, 'node update') }
     },
     presentCall: args => ({ card: 'generic', title: 'Update Ramify node', kind: 'edit', rawInput: args }),
   }))
@@ -452,10 +445,9 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
         properties: {
           theme: { type: 'string', required: true, enum: [...THEMES] },
           locale: { type: 'string', required: true, enum: [...LOCALES] },
-          url: { type: 'string', required: true },
         },
       },
-      render: (_args, value) => [{ type: 'text', text: `Ramify settings updated (${value.theme}, ${value.locale}): ${value.url}` }],
+      render: (_args, value) => [{ type: 'text', text: `Ramify settings updated (${value.theme}, ${value.locale}).` }],
     },
     async execute(args, exec) {
       if (args.theme !== undefined) {
@@ -468,7 +460,6 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
       return {
         theme: stringValue(settings, 'theme', 'settings read') as typeof THEMES[number],
         locale: stringValue(settings, 'locale', 'settings read') as typeof LOCALES[number],
-        url: runtime.url,
       }
     },
     presentCall: args => ({ card: 'generic', title: 'Update Ramify settings', kind: 'edit', rawInput: args }),

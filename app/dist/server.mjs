@@ -71,7 +71,7 @@ var UI_CONTENT_SECURITY_POLICY = [
   "base-uri 'none'",
   "connect-src 'self'",
   "font-src 'self' data:",
-  "frame-ancestors 'none'",
+  "frame-ancestors 'self' http://127.0.0.1:* http://localhost:*",
   "frame-src 'self' data: blob:",
   "img-src 'self' data: blob:",
   "object-src 'none'",
@@ -182,10 +182,12 @@ function serveStatic(res, requestPath) {
   const cacheControl = relative(DIST, file).startsWith("assets") ? "public, max-age=31536000, immutable" : "no-cache";
   res.writeHead(200, {
     ...BASE_SECURITY_HEADERS,
+    // The packaged DSH client embeds this trusted local UI in its workspace
+    // surface. The CSP still limits ancestors to loopback DSH pages.
+    "Cross-Origin-Resource-Policy": "cross-origin",
     "Cache-Control": cacheControl,
     "Content-Security-Policy": UI_CONTENT_SECURITY_POLICY,
-    "Content-Type": contentType.startsWith("text/") ? `${contentType}; charset=utf-8` : contentType,
-    "X-Frame-Options": "DENY"
+    "Content-Type": contentType.startsWith("text/") ? `${contentType}; charset=utf-8` : contentType
   });
   res.end(readFileSync(file));
 }

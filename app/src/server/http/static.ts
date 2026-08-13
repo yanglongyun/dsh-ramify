@@ -41,10 +41,12 @@ export function serveStatic(res: ServerResponse, requestPath: string) {
     : 'no-cache';
   res.writeHead(200, {
     ...BASE_SECURITY_HEADERS,
+    // The packaged DSH client embeds this trusted local UI in its workspace
+    // surface. The CSP still limits ancestors to loopback DSH pages.
+    'Cross-Origin-Resource-Policy': 'cross-origin',
     'Cache-Control': cacheControl,
     'Content-Security-Policy': UI_CONTENT_SECURITY_POLICY,
     'Content-Type': contentType.startsWith('text/') ? `${contentType}; charset=utf-8` : contentType,
-    'X-Frame-Options': 'DENY',
   });
   res.end(readFileSync(file));
 }

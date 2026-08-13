@@ -11,7 +11,7 @@ export const UI_CONTENT_SECURITY_POLICY = [
   "base-uri 'none'",
   "connect-src 'self'",
   "font-src 'self' data:",
-  "frame-ancestors 'none'",
+  "frame-ancestors 'self' http://127.0.0.1:* http://localhost:*",
   "frame-src 'self' data: blob:",
   "img-src 'self' data: blob:",
   "object-src 'none'",

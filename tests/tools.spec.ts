@@ -44,7 +44,7 @@ describe('Ramify tools', () => {
     expect(sections[0]?.text).toContain('multiple creative directions')
   })
 
-  it('maps project creation to the local API and returns a focused URL', async () => {
+  it('maps project creation to the local API without exposing the loopback service URL', async () => {
     const { ctx, tools } = harness()
     const request = vi.fn().mockResolvedValue({
       id: 'project-1',
@@ -54,10 +54,7 @@ describe('Ramify tools', () => {
       created_at: '2026-08-14T00:00:00.000Z',
       updated_at: '2026-08-14T00:00:00.000Z',
     })
-    const runtime = {
-      request,
-      projectUrl: (id: string) => `http://127.0.0.1:9519/projects/${id}`,
-    } as unknown as RamifyRuntime
+    const runtime = { request } as unknown as RamifyRuntime
     registerRamifyTools(ctx, runtime)
     const tool = tools.find(candidate => candidate.name === 'ramify_project_create')
     const result = await tool?.execute(
@@ -68,7 +65,6 @@ describe('Ramify tools', () => {
       projectId: 'project-1',
       rootId: 'root-1',
       title: 'Three directions',
-      url: 'http://127.0.0.1:9519/projects/project-1',
     })
     expect(request).toHaveBeenCalledWith('/api/projects', expect.objectContaining({ method: 'POST' }), expect.any(AbortSignal))
   })

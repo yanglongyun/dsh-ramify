@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import type { IncomingMessage } from 'node:http';
 import test from 'node:test';
-import { isAllowedHost } from './security.js';
+import { isAllowedHost, UI_CONTENT_SECURITY_POLICY } from './security.js';
 
 const request = (host?: string) => ({ headers: { host } }) as IncomingMessage;
 
@@ -23,4 +23,9 @@ test('supports an explicit host allowlist', () => {
     if (previous === undefined) delete process.env.RAMIFY_ALLOWED_HOSTS;
     else process.env.RAMIFY_ALLOWED_HOSTS = previous;
   }
+});
+
+test('allows embedding only from a loopback DSH web surface', () => {
+  assert.match(UI_CONTENT_SECURITY_POLICY, /frame-ancestors 'self' http:\/\/127\.0\.0\.1:\* http:\/\/localhost:\*/);
+  assert.doesNotMatch(UI_CONTENT_SECURITY_POLICY, /frame-ancestors 'none'/);
 });

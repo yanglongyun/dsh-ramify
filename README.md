@@ -11,6 +11,7 @@ Ramify 是 DeepSeek Harness 的创意分支与可视化迭代插件。它让 Age
 ## 特性
 
 - 原生 DSH 工具：项目、树、批量节点、作品完成、节点更新和界面设置。
+- 原生 DSH Client UI：侧栏 Ramify 入口与全屏工作台，不必离开 Harness。
 - 安装后自动启动本地画布，不需要单独运行 CLI。
 - HTML、Markdown、SVG、图片、视频和音频作品可直接预览。
 - SQLite 本地持久化与 Server-Sent Events 实时更新。
@@ -43,7 +44,7 @@ dsh plugin --profile web add @ramify/dsh-ramify
 dsh web
 ```
 
-默认画布地址为 [http://127.0.0.1:9519](http://127.0.0.1:9519)。实际创作时，`ramify_project_create` 会返回当前项目的聚焦链接。
+启动后可直接点击 DSH 左侧栏底部的 **Ramify** 打开内置工作台。Agent 的工具结果只引导用户使用这个内置入口，不暴露底层 loopback 地址。工作台顶部仍保留“在新窗口打开”按钮，作为可选的独立窗口模式。
 
 ## 使用
 
@@ -98,6 +99,8 @@ npm pack --dry-run
 ```
 
 构建产物 `lib/` 与 `app/dist/` 会提交到仓库，因此从本地 checkout 或 Git 安装时不需要执行安装期构建脚本。
+
+浏览器端通过包清单中的 `dsh.client` 声明加载，界面只注册 DSH 提供的 `sidebar.footer.action` 与 `shell.overlay` 插槽，并复用 Harness 提供的 React 运行时。
 
 ## 许可证
 

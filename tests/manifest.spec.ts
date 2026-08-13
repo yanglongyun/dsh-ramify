@@ -6,8 +6,20 @@ describe('package manifest', () => {
     const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
     expect(manifest.name).toBe('@ramify/dsh-ramify')
     expect(manifest.private).not.toBe(true)
-    expect(manifest.dsh).toEqual({ bundle: { patch: './cordis.patch.yml' } })
+    expect(manifest.dsh).toEqual({
+      bundle: { patch: './cordis.patch.yml' },
+      client: {
+        inject: [
+          '@deepseek-ai/dsh-client-runtime',
+          '@deepseek-ai/dsh-client-ui-layout',
+          '@deepseek-ai/dsh-client-ui-sidebar',
+          '@deepseek-ai/dsh-client-ui-tool',
+        ],
+        platform: 'web',
+      },
+    })
     expect(manifest.main).toBe('./lib/index.js')
+    expect(manifest.exports['./client'].default).toBe('./lib/client.js')
   })
 
   it('mounts the package through the bundle patch', async () => {
