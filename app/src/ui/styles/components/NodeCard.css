@@ -53,6 +53,10 @@
 .cb-node-veil { position: absolute; inset: 0; } /* 盖住 iframe 保证节点整体可点 */
 .cb-node-variant.is-generating .cb-node-thumb {
   background: repeating-linear-gradient(45deg, #f6f7f9 0 8px, #f1f2f5 8px 16px);
+  animation: cb-generating-stripes 1.25s linear infinite;
+}
+@keyframes cb-generating-stripes {
+  to { background-position: 32px 0; }
 }
 .cb-node-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; }
 
@@ -175,4 +179,8 @@
 @keyframes cb-plant-sway {
   0%, 100% { transform: rotate(-2.5deg); }
   50% { transform: rotate(2.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cb-node-variant.is-generating .cb-node-thumb { animation: none; }
 }
