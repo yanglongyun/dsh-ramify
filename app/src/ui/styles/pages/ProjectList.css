@@ -1,0 +1,38 @@
+.bd-home {
+  min-height: 100vh; color: var(--ink); background-color: var(--bg);
+  background-image: radial-gradient(var(--grid-dot) 1.2px, transparent 1.2px); background-size: 24px 24px;
+}
+.bd-corner {
+  position: fixed; left: 26px; top: 24px; z-index: 20; display: flex; align-items: center;
+  gap: 9px; color: var(--ink); font-size: 15px; font-weight: 800;
+}
+.bd-help-entry {
+  position: fixed; right: 26px; top: 20px; z-index: 20; display: flex; align-items: center; gap: 7px;
+  padding: 7px 11px 7px 8px; border: 1px solid rgba(205,197,182,.78); border-radius: 999px;
+  background: rgba(252,250,247,.76); color: var(--ink-2); backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(44,40,39,.06); font-size: 11.5px; font-weight: 700;
+  transition: color .15s, border-color .15s, background .15s, transform .15s;
+}
+.bd-help-entry span { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); font-family: var(--serif); font-size: 13px; font-weight: 800; }
+.bd-help-entry:hover { color: var(--accent-ink); border-color: var(--accent-2); background: var(--panel); transform: translateY(-1px); }
+.bd-board { max-width: 1120px; margin: 0 auto; padding: 96px 46px 80px; }
+.bd-pager {
+  display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 42px;
+  color: var(--ink-2); font-family: var(--mono); font-size: 11px;
+}
+.bd-pager button {
+  width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 50%;
+  background: var(--panel); color: #6d6152; box-shadow: var(--shadow); font-size: 15px;
+  transition: color .12s, transform .1s;
+}
+.bd-pager button:hover:not(:disabled) { color: var(--ink); transform: translateY(-1px); }
+.bd-pager button:disabled { cursor: default; opacity: .35; }
+.bd-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 90px 20px;
+  color: var(--ink-3); font-family: var(--serif); font-size: 14px; font-style: italic;
+}
+@media (max-width: 640px) {
+  .bd-corner { left: 20px; top: 18px; }
+  .bd-help-entry { right: 16px; top: 14px; }
+  .bd-board { padding: 84px 24px 64px; }
+}

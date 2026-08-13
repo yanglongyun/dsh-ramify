@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 260" role="img" aria-labelledby="title desc">
+  <title id="title">Ramify flora garden</title>
+  <desc id="desc">Five hand-drawn plants: a red flower, succulent, sunflower, pine, and bamboo.</desc>
+  <defs>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="#e0d9cc"/>
+    </pattern>
+  </defs>
+
+  <rect x="1" y="1" width="1198" height="258" rx="28" fill="#f7f3ec" stroke="#e7e1d6" stroke-width="2"/>
+  <rect x="1" y="1" width="1198" height="258" rx="28" fill="url(#dots)" opacity=".72"/>
+  <path d="M70 222 C300 216 450 226 610 219 C790 211 960 228 1130 219" fill="none" stroke="#2c2827" stroke-width="2.4" stroke-linecap="round" opacity=".16"/>
+
+  <!-- 小红花 -->
+  <g transform="translate(150 18)">
+    <path d="M0 202 C-2 163 3 128 0 92" fill="none" stroke="#7d8c77" stroke-width="5" stroke-linecap="round"/>
+    <path d="M0 158 C-28 154 -38 130 -9 140 C-3 144 0 151 0 158Z" fill="#9ab08f" stroke="#2c2827" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M1 136 C29 128 39 104 10 116 C4 120 1 128 1 136Z" fill="#7d8c77" stroke="#2c2827" stroke-width="2.6" stroke-linejoin="round"/>
+    <g transform="translate(0 65) rotate(-7)" stroke="#2c2827" stroke-width="3" stroke-linejoin="round">
+      <ellipse cx="0" cy="-22" rx="14" ry="21" fill="#d95b57"/>
+      <ellipse cx="0" cy="-22" rx="14" ry="21" fill="#d95b57" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-22" rx="14" ry="21" fill="#d95b57" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-22" rx="14" ry="21" fill="#d95b57" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-22" rx="14" ry="21" fill="#d95b57" transform="rotate(288)"/>
+      <circle r="12" fill="#eec16f"/>
+    </g>
+  </g>
+
+  <!-- 治愈多肉 -->
+  <g transform="translate(365 40)" stroke="#2c2827" stroke-linejoin="round">
+    <path d="M-58 146 C-77 116 -51 91 -30 108 C-35 82 -5 68 10 91 C27 68 57 85 48 111 C74 99 91 126 68 146Z" fill="#9ab08f" stroke-width="3"/>
+    <path d="M-39 146 C-50 125 -34 108 -18 120 C-21 99 3 91 13 108 C27 94 48 107 41 127 C56 123 66 139 54 146Z" fill="#7d8c77" stroke-width="3"/>
+    <path d="M-10 122 Q-7 118 -4 122 M17 119 Q20 115 23 119" fill="none" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M0 134 Q7 140 14 134" fill="none" stroke-width="2.3" stroke-linecap="round"/>
+    <ellipse cx="5" cy="158" rx="72" ry="13" fill="#e8dfc9" stroke-width="3"/>
+  </g>
+
+  <!-- 向日葵 -->
+  <g transform="translate(600 16)">
+    <path d="M0 205 C-2 166 3 131 0 98" fill="none" stroke="#7d8c77" stroke-width="5" stroke-linecap="round"/>
+    <path d="M-2 168 C-30 164 -40 142 -12 150 C-5 154 -2 161 -2 168Z" fill="#9ab08f" stroke="#2c2827" stroke-width="2.7" stroke-linejoin="round"/>
+    <path d="M2 154 C30 146 40 124 12 135 C5 139 2 147 2 154Z" fill="#7d8c77" stroke="#2c2827" stroke-width="2.7" stroke-linejoin="round"/>
+    <g transform="translate(0 66)" stroke="#2c2827" stroke-width="2.5" stroke-linejoin="round">
+      <g fill="#eec16f">
+        <ellipse cy="-31" rx="9" ry="17"/><ellipse cy="-31" rx="9" ry="17" transform="rotate(30)"/>
+        <ellipse cy="-31" rx="9" ry="17" transform="rotate(60)"/><ellipse cy="-31" rx="9" ry="17" transform="rotate(90)"/>
+        <ellipse cy="-31" rx="9" ry="17" transform="rotate(120)"/><ellipse cy="-31" rx="9" ry="17" transform="rotate(150)"/>
+        <ellipse cy="-31" rx="9" ry="17" transform="rotate(180)"/><ellipse cy="-31" rx="9" ry="17" transform="rotate(210)"/>
+        <ellipse cy="-31" rx="9" ry="17" transform="rotate(240)"/><ellipse cy="-31" rx="9" ry="17" transform="rotate(270)"/>
+        <ellipse cy="-31" rx="9" ry="17" transform="rotate(300)"/><ellipse cy="-31" rx="9" ry="17" transform="rotate(330)"/>
+      </g>
+      <circle r="22" fill="#a8763e"/>
+      <path d="M-8 -4 Q-5 -8 -2 -4 M3 -4 Q6 -8 9 -4 M-7 7 Q0 14 7 7" fill="none" stroke-width="2.3" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- 孤松 -->
+  <g transform="translate(840 13)">
+    <path d="M-18 207 C-12 187 -24 176 -8 164 C-19 149 -3 135 8 126 C0 108 17 93 31 86" fill="none" stroke="#7a5c3e" stroke-width="6" stroke-linecap="round"/>
+    <g fill="#7d8c77" stroke="#2c2827" stroke-width="3" stroke-linejoin="round">
+      <ellipse cx="42" cy="63" rx="54" ry="21"/>
+      <ellipse cx="-18" cy="92" rx="36" ry="15" fill="#9ab08f"/>
+      <ellipse cx="82" cy="101" rx="31" ry="13" fill="#9ab08f"/>
+    </g>
+    <path d="M-50 214 L-15 182 L22 214Z" fill="#ded5c0" stroke="#2c2827" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 竹 -->
+  <g transform="translate(1050 8)">
+    <path d="M-18 210 L-18 63 M30 210 L30 88" fill="none" stroke="#7d8c77" stroke-width="9" stroke-linecap="round"/>
+    <path d="M-24 165 H-12 M-24 120 H-12 M-24 78 H-12 M24 170 H36 M24 128 H36" fill="none" stroke="#2c2827" stroke-width="3" stroke-linecap="round"/>
+    <g fill="#7d8c77" stroke="#2c2827" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M-18 63 C-36 46 -56 45 -72 51 C-54 59 -36 64 -18 63Z"/>
+      <path d="M-18 63 C-6 43 14 35 31 39 C16 53 -1 62 -18 63Z"/>
+      <path d="M30 88 C45 73 63 68 78 75 C63 86 46 91 30 88Z" fill="#9ab08f"/>
+    </g>
+  </g>
+
+  <circle cx="75" cy="56" r="4" fill="#d95b57" opacity=".28"/>
+  <circle cx="1125" cy="78" r="5" fill="#eec16f" opacity=".45"/>
+</svg>

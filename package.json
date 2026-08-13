@@ -1,0 +1,78 @@
+{
+  "name": "@ramify/dsh-ramify",
+  "version": "0.1.0",
+  "description": "Creative branching canvas plugin for DeepSeek Harness",
+  "license": "MIT",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "app/dist",
+    "media",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yanglongyun/dsh-ramify.git"
+  },
+  "homepage": "https://github.com/yanglongyun/dsh-ramify#readme",
+  "bugs": {
+    "url": "https://github.com/yanglongyun/dsh-ramify/issues"
+  },
+  "keywords": [
+    "deepseek",
+    "dsh",
+    "dsh-plugin",
+    "agent",
+    "canvas",
+    "creative"
+  ],
+  "scripts": {
+    "build": "npm run build:app && npm run build:plugin",
+    "build:app": "npm --workspace @ramify/web-runtime run build",
+    "build:plugin": "node scripts/build-plugin.mjs && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit && npm --workspace @ramify/web-runtime run typecheck",
+    "test": "vitest run && npm --workspace @ramify/web-runtime test",
+    "check": "npm run typecheck && npm test && npm run build && npm pack --dry-run",
+    "dev:app": "npm --workspace @ramify/web-runtime run dev"
+  },
+  "workspaces": [
+    "app"
+  ],
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-system-prompt": ">=0.1.0-rc.2 <0.2.0",
+    "@deepseek-ai/dsh-tools": ">=0.1.0-rc.2 <0.2.0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-system-prompt": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.6",
+    "@types/node": "^22.18.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  }
+}

@@ -1,0 +1,268 @@
+/* ============================================================
+   想象 Ramify — Flora 暖纸设计系统
+   视觉语言来自「小红花」系列作品:纸与墨做基底、
+   朱砂红唯一主角、灰绿做配角;克制阴影、内容优先。
+   与 imagen(冷蓝)刻意区分,用于品牌 A/B。
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+  --bg: #f4f0ea;
+  --grid-dot: #e0d9cc;
+  --panel: #fcfaf7;
+  --panel-2: #f7f3ec;
+  --line: #e7e1d6;
+  --line-soft: #efeae0;
+  --line-strong: #cdc5b6;
+  --ink: #2c2827;
+  --ink-2: #6b6560;
+  --ink-3: #96908a;
+  --accent: #d95b57;
+  --accent-2: #e37b76;
+  --accent-ink: #b23b35;
+  --accent-soft: #f9ece8;
+  --danger: #d05050;
+  --danger-soft: #fbeaea;
+  --ok: #5a735b;
+  --ok-soft: #edf2ea;
+  --warn: #c98a2e;
+  --shadow: 0 1px 2px rgba(44, 40, 39, .05), 0 10px 30px rgba(44, 40, 39, .07);
+  --shadow-lg: 0 4px 14px rgba(44, 40, 39, .09), 0 24px 60px rgba(44, 40, 39, .15);
+  --radius: 11px;
+  --radius-lg: 16px;
+  --font: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --serif: Georgia, "Songti SC", "Noto Serif SC", serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { width: 100%; height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button { font: inherit; cursor: pointer; color: inherit; background: none; border: none; }
+textarea, input { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--accent-soft); color: var(--accent-ink); }
+
+/* 点阵背景 —— 全站画布母题 */
+.dot {
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--grid-dot) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+/* 通用按钮 */
+.btn-ghost {
+  font-size: 13px; font-weight: 600; color: var(--ink-2);
+  padding: 8px 14px; border-radius: 8px; transition: color .12s, background .12s;
+}
+.btn-ghost:hover { color: var(--ink); background: #eef0f4; }
+.btn-lime {
+  font-size: 13px; font-weight: 700; color: #fff; background: var(--accent);
+  padding: 9px 18px; border-radius: 999px; transition: filter .12s, transform .08s, box-shadow .15s;
+  box-shadow: 0 1px 2px rgba(59, 91, 253, .25);
+}
+.btn-lime:hover { filter: brightness(1.06); box-shadow: 0 2px 8px rgba(59, 91, 253, .3); }
+.btn-lime:active { transform: scale(.97); }
+
+.cb-loading {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  color: var(--ink-3); font-size: 14px; background: var(--bg);
+}
+
+/* ============================================================
+   应用外壳 / 全局
+   ============================================================ */
+.cb-app, .cb-root { height: 100%; }
+.cb-global-toast {
+  position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
+  background: var(--ink); color: #fff; font-size: 13px; font-weight: 500;
+  padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow-lg); z-index: 200;
+  animation: cb-toast-in .25s cubic-bezier(.3, 1.2, .5, 1) both;
+}
+@keyframes cb-toast-in { from { opacity: 0; transform: translateX(-50%) translateY(14px); } }
+
+.cb-topbar {
+  flex: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; background: rgba(255, 255, 255, .82); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line-soft); position: sticky; top: 0; z-index: 30;
+}
+.cb-brand { display: flex; align-items: center; gap: 8px; }
+.cb-brand svg { fill: var(--accent); }
+.cb-brand b { font-size: 16px; font-weight: 800; }
+.cb-brand span { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.cb-top-actions { display: flex; align-items: center; gap: 14px; }
+.cb-credit-icon { display: inline-block; flex: none; vertical-align: -0.14em; }
+.cb-balance-pill {
+  display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink-2);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px;
+  transition: color .12s, border-color .12s, background .12s, box-shadow .12s;
+}
+.cb-balance-pill b { color: var(--ink); font-weight: 700; }
+button.cb-balance-pill:hover {
+  color: var(--accent-ink); border-color: var(--accent); background: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(59, 91, 253, .08);
+}
+
+/* 主页 / 子页面外壳:共用全站点阵母题 */
+.cb-home,
+.cb-subpage {
+  height: 100%; display: flex; flex-direction: column;
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--grid-dot) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+.cb-subpage-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cb-subpage-head h1 { font-size: 16px; font-weight: 700; }
+.cb-subpage-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.cb-subpage-inner { max-width: 680px; margin: 0 auto; padding: 32px 24px 64px; }
+
+/* Shared back button */
+.cb-canvas-back {
+  width: 34px; height: 34px; border-radius: 9px; color: var(--ink-2); font-size: 18px; flex: none;
+  display: flex; align-items: center; justify-content: center; transition: color .12s, background .12s;
+}
+.cb-canvas-back:hover { color: var(--ink); background: #eef0f4; }
+
+@keyframes cb-pop { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes cb-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* 夜间模式保留暖纸与植物的品牌气质，不改变作品 iframe 自身的设计。 */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #181614;
+  --grid-dot: #342f2a;
+  --panel: #221f1c;
+  --panel-2: #292520;
+  --line: #403933;
+  --line-soft: #332e29;
+  --line-strong: #5a5047;
+  --ink: #eee7de;
+  --ink-2: #beb4a9;
+  --ink-3: #91877d;
+  --accent: #e7756e;
+  --accent-2: #f08d85;
+  --accent-ink: #f49a93;
+  --accent-soft: #3c2421;
+  --danger: #ef7777;
+  --danger-soft: #402222;
+  --ok: #9eb49a;
+  --ok-soft: #263229;
+  --warn: #d9a451;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .22), 0 10px 30px rgba(0, 0, 0, .24);
+  --shadow-lg: 0 4px 14px rgba(0, 0, 0, .28), 0 24px 60px rgba(0, 0, 0, .4);
+}
+
+:root[data-theme='dark'] .btn-ghost:hover,
+:root[data-theme='dark'] .cb-canvas-back:hover,
+:root[data-theme='dark'] .cb-zoom button:hover,
+:root[data-theme='dark'] .cb-preview-button:hover {
+  background: #2d2925;
+}
+
+:root[data-theme='dark'] .cb-topbar {
+  background: rgba(30, 27, 24, .84);
+}
+
+:root[data-theme='dark'] .cb-canvas-bar,
+:root[data-theme='dark'] .cb-minimap {
+  background: rgba(34, 31, 28, .92);
+}
+
+:root[data-theme='dark'] .cb-canvas-hint {
+  background: rgba(34, 31, 28, .8);
+  border-color: rgba(255, 255, 255, .06);
+}
+
+:root[data-theme='dark'] .cb-preview-content {
+  background: #1d1a17;
+}
+
+:root[data-theme='dark'] .cb-preview-content-body {
+  color: #d7cabc;
+}
+
+:root[data-theme='dark'] .cb-node-root {
+  background: linear-gradient(180deg, #28231f, #211d1a);
+  border-color: #51443a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 1px 2px rgba(0, 0, 0, .25), 0 14px 34px rgba(0, 0, 0, .3);
+}
+
+:root[data-theme='dark'] .cb-node-root:hover { border-color: #735c4c; }
+:root[data-theme='dark'] .cb-node-root.is-selected { box-shadow: 0 0 0 3px var(--accent-soft), 0 14px 34px rgba(0, 0, 0, .3); }
+:root[data-theme='dark'] .cb-node-root-mark {
+  border-color: #57332f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+
+:root[data-theme='dark'] .cb-node-variant.is-generating .cb-node-thumb {
+  background: repeating-linear-gradient(45deg, #292723 0 8px, #24221f 8px 16px);
+}
+
+:root[data-theme='dark'] .cb-node-skeleton i { background: #4b4741; }
+:root[data-theme='dark'] .cb-node-info-skeleton i {
+  background: linear-gradient(90deg, #34312d 25%, #46413b 50%, #34312d 75%);
+  background-size: 200% 100%;
+}
+
+:root[data-theme='dark'] .cb-retry-button { background: var(--panel); }
+
+:root[data-theme='dark'] .cb-node-type.is-html {
+  color: #9dacff; background: #252b4a; border-color: #39436f;
+}
+:root[data-theme='dark'] .cb-node-type.is-markdown {
+  color: #d5b978; background: #3a3020; border-color: #594929;
+}
+:root[data-theme='dark'] .cb-node-type.is-svg {
+  color: #8fcaa8; background: #20372b; border-color: #315541;
+}
+
+:root[data-theme='dark'] .cb-node-content {
+  background: #332b1e;
+  border-color: #594a30;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, .2), 0 14px 32px rgba(0, 0, 0, .3);
+}
+:root[data-theme='dark'] .cb-node-content.is-selected { box-shadow: 0 0 0 3px var(--accent-soft), 0 14px 32px rgba(0, 0, 0, .3); }
+:root[data-theme='dark'] .cb-content-text { color: #d8c69f; }
+
+:root[data-theme='dark'] .bd-help-entry {
+  border-color: rgba(90, 80, 71, .8);
+  background: rgba(34, 31, 28, .78);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .2);
+}
+:root[data-theme='dark'] .bd-pager button { color: var(--ink-2); }
+
+:root[data-theme='dark'] .bd-card {
+  background: #24211d;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, .22), 0 16px 36px rgba(0, 0, 0, .32);
+}
+:root[data-theme='dark'] .bd-card:hover { box-shadow: 0 4px 8px rgba(0, 0, 0, .26), 0 26px 54px rgba(0, 0, 0, .45); }
+:root[data-theme='dark'] .bd-del { background: rgba(36, 33, 29, .92); color: var(--ink-3); }
+:root[data-theme='dark'] .bd-shot { background: #302b25; }
+:root[data-theme='dark'] .bd-shot-mock i { background: #51493f; }
+:root[data-theme='dark'] .bd-shot-mock i.b { background: #9b7957; }
+:root[data-theme='dark'] .bd-memo,
+:root[data-theme='dark'] .bd-meta { color: var(--ink-3); }
+
+:root[data-theme='dark'] .bd-how-veil { background: rgba(0, 0, 0, .58); }
+:root[data-theme='dark'] .bd-how-box {
+  border-color: #4b4238;
+  background: linear-gradient(180deg, #28231e, #201c19);
+}
+:root[data-theme='dark'] .bd-how-command { background: #120f0d; color: #eee7de; }
+
+:root[data-theme='dark'] .bd-ghost-card {
+  border-color: #514a42;
+  background: rgba(34, 31, 28, .46);
+}
+:root[data-theme='dark'] .bd-ghost-pinhole { border-color: #514a42; }
+:root[data-theme='dark'] .bd-ghost-shot { background: rgba(55, 49, 42, .65); }
+:root[data-theme='dark'] .bd-ghost-shot.is-document i { background: #5a5147; }
+:root[data-theme='dark'] .bd-ghost-memo { color: var(--ink-3); }

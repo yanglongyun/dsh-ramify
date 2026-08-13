@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" role="img" aria-labelledby="title desc">
+  <title id="title">Ramify logo</title>
+  <desc id="desc">A hand-drawn branch with two red buds and one golden bud.</desc>
+  <path d="M10 18V9M10 9C10 5 7 3 3 3M10 11C10 7 13 5 17 5M10 13C10 10 8 8.5 5 8.5" fill="none" stroke="#2c2827" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="3" cy="3" r="1.7" fill="#d95b57"/>
+  <circle cx="17" cy="5" r="1.7" fill="#d95b57"/>
+  <circle cx="5" cy="8.5" r="1.5" fill="#eec16f"/>
+</svg>

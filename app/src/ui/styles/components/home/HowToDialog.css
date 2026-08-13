@@ -1,0 +1,28 @@
+.bd-how-veil {
+  position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: rgba(44,40,39,.34); backdrop-filter: blur(4px); animation: bd-how-veil-in .18s ease both;
+}
+.bd-how-box {
+  position: relative; width: min(500px,92vw); max-height: min(720px,90vh); overflow-y: auto; padding: 36px 34px 28px;
+  border: 1px solid #e2d9c6; border-radius: 18px 22px 17px 21px / 20px 17px 22px 18px;
+  background: linear-gradient(180deg,#fdfbf6,#f6f0e3); color: var(--ink); box-shadow: var(--shadow-lg);
+  animation: bd-how-in .24s cubic-bezier(.2,.8,.2,1) both;
+}
+.bd-how-tape { position: absolute; left: 50%; top: -10px; width: 78px; height: 22px; background: rgba(217,91,87,.3); box-shadow: 0 2px 4px rgba(44,40,39,.12); transform: translateX(-50%) rotate(-2.5deg); }
+.bd-how-box header { text-align: center; }
+.bd-how-kicker { color: var(--accent-ink); font-family: var(--mono); font-size: 9px; font-weight: 800; letter-spacing: .18em; }
+.bd-how-box h2 { margin-top: 6px; font-family: var(--serif); font-size: 24px; line-height: 1.35; }
+.bd-how-guide { display: grid; gap: 13px; margin-top: 22px; }
+.bd-how-guide p { margin: 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.8; }
+.bd-how-guide > p:first-child { color: var(--ink); font-size: 14px; }
+.bd-how-command { padding: 14px 17px; border-radius: 5px 13px 13px 13px; background: #443527; color: #f3efe8; font-family: var(--serif); font-size: 13px; line-height: 1.75; }
+.bd-how-actions { display: flex; align-items: center; justify-content: center; margin-top: 22px; }
+.bd-how-actions .is-main { padding: 10px 24px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 800; }
+@keyframes bd-how-veil-in { from { opacity: 0; } }
+@keyframes bd-how-in { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+@media (max-width: 640px) {
+  .bd-how-box { padding: 32px 20px 22px; }
+  .bd-how-box h2 { font-size: 21px; }
+  .bd-how-actions { flex-direction: column; gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .bd-how-veil, .bd-how-box { animation: none; } }

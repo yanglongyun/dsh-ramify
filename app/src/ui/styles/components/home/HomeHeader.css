@@ -1,0 +1,16 @@
+.bd-head { margin-bottom: 44px; text-align: center; }
+.bd-plant {
+  display: inline-block; height: 118px;
+  transform-origin: 50% 92%; animation: bd-plant-sway 3.6s ease-in-out infinite;
+}
+.bd-plant svg { width: auto; height: 100%; }
+.bd-greet { margin: 10px 0 0; color: var(--ink); font-family: var(--serif); font-size: 25px; font-weight: 600; }
+@keyframes bd-plant-sway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50% { transform: rotate(2.5deg); }
+}
+@media (max-width: 640px) {
+  .bd-greet { font-size: 20px; }
+  .bd-head { margin-bottom: 28px; }
+}
+@media (prefers-reduced-motion: reduce) { .bd-plant { animation: none; } }

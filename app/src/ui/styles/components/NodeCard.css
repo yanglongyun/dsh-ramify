@@ -1,0 +1,166 @@
+/* ============================================================
+   节点卡片 cb-node —— 尺寸对齐 layout.ts ROOT_SIZE / VARIANT_SIZE
+   ============================================================ */
+.cb-node {
+  position: absolute; left: 0; top: 0; cursor: pointer; user-select: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+/* 分叉 = 树上的短文字胶囊；根复用同一类型和外观 */
+.cb-node-root {
+  width: 244px; min-height: 54px; display: flex; align-items: center; gap: 10px;
+  padding: 10px 40px 10px 11px;
+  background: linear-gradient(180deg, #fdfbf8, #f8f3ea);
+  border: 1px solid #e6d6c6; border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 2px rgba(44, 40, 39, .06), 0 14px 34px rgba(44, 40, 39, .12);
+  transition: border-color .15s, box-shadow .15s;
+}
+.cb-node-root:hover { border-color: #d9beac; }
+.cb-node-root.is-selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), 0 14px 34px rgba(44, 40, 39, .12); }
+.cb-node-root-mark {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent-soft); border: 1px solid #f0d9d3;
+  display: grid; place-items: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+.cb-node-root-text {
+  min-width: 0; font-family: var(--serif); font-style: italic;
+  font-size: 13px; line-height: 1.4; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cb-node-root-seq { font-family: var(--mono); font-size: 8px; font-weight: 700; color: var(--accent); }
+
+/* 变体卡:缩略图 + 信息 + 元数据 */
+.cb-node-variant {
+  width: 188px; height: 202px; display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.cb-node-variant:hover { border-color: var(--line-strong); }
+.cb-node-variant.is-selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
+.cb-node-variant.is-generating { border-style: dashed; }
+.cb-node-variant.is-error { border-color: var(--danger); }
+
+.cb-node-thumb {
+  flex: 1; min-height: 0; position: relative; overflow: hidden; background: var(--panel-2);
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: calc(var(--radius) - 1.5px) calc(var(--radius) - 1.5px) 0 0;
+}
+.cb-node-thumb iframe {
+  position: absolute; inset: 0 auto auto 0;
+  width: 415%; height: 415%; border: none; background: #fff;
+  transform: scale(.241); transform-origin: 0 0; pointer-events: none;
+}
+.cb-node-veil { position: absolute; inset: 0; } /* 盖住 iframe 保证节点整体可点 */
+.cb-node-variant.is-generating .cb-node-thumb {
+  background: repeating-linear-gradient(45deg, #f6f7f9 0 8px, #f1f2f5 8px 16px);
+}
+.cb-node-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; }
+
+/* 骨架占位 */
+.cb-node-skeleton { position: absolute; inset: 0; padding: 14px; }
+.cb-node-skeleton::before {
+  content: ''; display: block; width: 42%; height: 12px; border-radius: 3px; background: var(--accent); opacity: .7; margin-bottom: 12px;
+}
+.cb-node-skeleton i { display: block; height: 7px; border-radius: 3px; background: #d8dde8; margin-top: 8px; }
+.cb-node-skeleton i:nth-child(1) { width: 86%; }
+.cb-node-skeleton i:nth-child(2) { width: 62%; }
+.cb-node-skeleton i:nth-child(3) { width: 74%; }
+.cb-node-skeleton i:nth-child(4) { width: 48%; }
+
+/* 生成中 = 树苗在长:微风摇曳 + 花苞呼吸 */
+.cb-sapling { display: block; }
+.cb-sapling-sway { transform-origin: 25px 57px; animation: cb-sway 2.8s ease-in-out infinite; }
+.cb-sapling-leaf { transform-origin: 25px 35px; animation: cb-leaf 2.8s ease-in-out infinite; }
+.cb-sapling-leaf.is-r { animation-delay: .35s; }
+.cb-sapling-bud { transform-origin: 25px 12px; animation: cb-bud 2.1s ease-in-out infinite; }
+@keyframes cb-sway { 0%, 100% { transform: rotate(-2.6deg); } 50% { transform: rotate(2.6deg); } }
+@keyframes cb-leaf { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(2.2deg); } }
+@keyframes cb-bud { 0%, 100% { transform: scale(.94); } 50% { transform: scale(1.06); } }
+.cb-node-generating-label { font-size: 11px; color: var(--ink-3); }
+.cb-node-error-label { font-size: 11px; color: var(--danger); padding: 0 12px; text-align: center; line-height: 1.4; }
+.cb-retry-button {
+  font-size: 11px; font-weight: 600; color: var(--danger); background: #fff;
+  border: 1px solid var(--danger); border-radius: 6px; padding: 3px 12px; transition: background .12s;
+}
+.cb-retry-button:hover { background: var(--danger-soft); }
+
+.cb-node-info { flex: none; padding: 8px 11px 7px; overflow: hidden; }
+.cb-node-title { font-size: 12px; font-weight: 700; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-node-desc {
+  margin-top: 3px; font-family: var(--serif); font-style: italic;
+  font-size: 10.5px; line-height: 1.6; color: var(--ink-3);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.cb-node-info-skeleton { display: flex; flex-direction: column; gap: 7px; padding: 3px 0; }
+.cb-node-info-skeleton i { display: block; height: 9px; border-radius: 4px; background: linear-gradient(90deg, #e9ebef 25%, #f3f4f7 50%, #e9ebef 75%); background-size: 200% 100%; animation: cb-node-shimmer 1.3s ease-in-out infinite; }
+.cb-node-info-skeleton i:first-child { width: 66%; }
+.cb-node-info-skeleton i:last-child { width: 42%; height: 7px; }
+@keyframes cb-node-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.cb-node-meta {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 7px 11px; border-top: 1px solid var(--line-soft);
+}
+.cb-node-type {
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+  color: var(--ink-3); background: var(--panel-2); border: 1px solid var(--line-soft);
+}
+.cb-node-type.is-html { color: #3b5bfd; background: #eef1fe; border-color: #dbe1fb; }
+.cb-node-type.is-markdown { color: #7a5c26; background: #f7efdd; border-color: #ecdfc2; }
+.cb-node-type.is-svg { color: #2f7a52; background: #e6f4ec; border-color: #cfe8da; }
+.cb-node-credits { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--ink-3); flex: none; }
+
+/* 子树收起 */
+.cb-node-collapse {
+  position: absolute; right: -12px; top: 50%; transform: translateY(-50%); z-index: 5;
+  width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; line-height: 1;
+  border: 1px solid var(--line-strong); background: var(--panel); color: var(--ink-2);
+  box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center;
+}
+.cb-node-collapse:hover { border-color: var(--accent); color: var(--accent); }
+.cb-node-collapse.is-collapsed { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* skill 版:节点删除按钮(hover 才现身) */
+.cb-node-del {
+  width: 18px; height: 18px; border-radius: 6px; font-size: 10px; line-height: 1;
+  color: var(--ink-3); background: none; display: grid; place-items: center;
+  opacity: 0; transition: opacity .12s, color .12s, background .12s;
+}
+.cb-node-variant:hover .cb-node-del { opacity: 1; }
+.cb-node-del:hover { color: var(--danger); background: var(--danger-soft); }
+
+/* 节点短号(对话引用用) */
+.cb-node-seq {
+  font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--ink-3);
+  margin-right: 6px; vertical-align: 1px;
+}
+
+/* content 卡:保留原黄纸条视觉 */
+.cb-node-content {
+  width: 188px; height: 202px; cursor: pointer;
+  background: #f7efdd; border: 1px solid #eadfc2; border-radius: 3px;
+  padding: 26px 18px 16px; display: flex; flex-direction: column;
+  box-shadow: 0 2px 3px rgba(44, 40, 39, .06), 0 14px 32px rgba(44, 40, 39, .13);
+  transition: transform .18s, box-shadow .18s;
+}
+.cb-node-content.is-selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), 0 14px 32px rgba(44, 40, 39, .13); }
+.cb-content-tape {
+  position: absolute; left: 50%; top: -9px; transform: translateX(-50%) rotate(-3deg);
+  width: 64px; height: 18px; background: rgba(217, 91, 87, .32); box-shadow: 0 2px 4px rgba(44, 40, 39, .12);
+}
+.cb-content-title { flex: none; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-content-text {
+  flex: 1; min-height: 0; overflow: hidden;
+  font-family: var(--serif); font-style: italic; font-size: 13.5px; line-height: 1.95; color: #6b5a38;
+  white-space: pre-wrap; word-break: break-word;
+  display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical;
+}
+
+/* 生成中的占位植物:摇曳,像在长 */
+.cb-node-plant { display: block; height: 62px; animation: cb-plant-sway 3.6s ease-in-out infinite; transform-origin: 50% 92%; }
+.cb-node-plant svg { height: 100%; width: auto; }
+@keyframes cb-plant-sway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50% { transform: rotate(2.5deg); }
+}

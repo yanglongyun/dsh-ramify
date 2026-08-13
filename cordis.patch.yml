@@ -1,0 +1,8 @@
+# Ramify bundle: starts the loopback canvas and registers the model-facing tools.
+- insert:
+    - id: ramify
+      name: '@ramify/dsh-ramify'
+      config:
+        port: 9519
+        startupTimeoutMs: 5000
+        shutdownTimeoutMs: 3000
