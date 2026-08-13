@@ -2,16 +2,39 @@
   <img src="media/ramify-logo.svg" alt="Ramify" width="96" />
 </p>
 
-# dsh-ramify
+<h1 align="center">dsh-ramify</h1>
 
-Ramify 是 DeepSeek Harness 的创意分支与可视化迭代插件。它让 Agent 把多个创作方向、真实作品和后续修订组织成一棵可实时查看、比较和继续分叉的树。
+<p align="center">
+  <strong>DeepSeek Harness 的原生创意分支画布插件</strong>
+</p>
+
+<p align="center">
+  <img alt="dsh-plugin" src="https://img.shields.io/badge/dsh--plugin-Ramify-b55b47" />
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-61735c" />
+  <img alt="node" src="https://img.shields.io/badge/Node.js-%E2%89%A522.19-43853d" />
+</p>
+
+Ramify 是一个专为 DeepSeek Harness（DSH）开发的 `dsh-plugin`。它把 Agent 生成的多个创作方向、可运行作品和后续修订组织成一棵实时更新的创意树，让你可以在 DSH 内直接查看、比较并继续分叉。
 
 ![Ramify 创意树画布](media/ramify-canvas.png)
 
+## 工作方式
+
+1. 点击 DSH 左侧栏的 **Ramify**，打开内置工作台。
+2. 在 Ramify 原生输入框中输入需求并选择方案数量。
+3. 插件立即创建项目并进入画布，同时把任务提交给当前 DSH 会话和模型。
+4. Agent 通过 Ramify 工具把方案持续写入画布，节点和预览实时出现。
+5. 点击节点右上角的发散按钮，输入修改要求，即可从该节点继续生成分支。
+
+整个过程不需要复制本地地址，也不需要在 Ramify 中再次配置模型或 API Key。
+
 ## 特性
 
-- 原生 DSH 工具：项目、树、批量节点、作品完成、节点更新和界面设置。
-- 原生 DSH Client UI：侧栏 Ramify 入口与全屏工作台，不必离开 Harness。
+- **原生 DSH 插件**：使用标准插件清单、Cordis 服务和 Client UI 插槽，没有修改 Harness 源码。
+- **原生 Ramify UI**：保留网站版创作票据、数量选择、画布、节点卡片和分支气泡的视觉与交互。
+- **当前会话驱动**：界面提交通过 DSH 官方会话输入能力发送给当前模型。
+- **即时进入画布**：首页提交后先创建项目并立即打开画布，Agent 随后向同一项目写入节点。
+- **可视化分支**：从任意已完成节点继续发散，旧方案保持不变。
 - 安装后自动启动本地画布，不需要单独运行 CLI。
 - HTML、Markdown、SVG、图片、视频和音频作品可直接预览。
 - SQLite 本地持久化与 Server-Sent Events 实时更新。
@@ -21,11 +44,11 @@ Ramify 是 DeepSeek Harness 的创意分支与可视化迭代插件。它让 Age
 ## 环境要求
 
 - Node.js 22.19 或更高版本
-- DeepSeek Harness 0.1.0-rc.5 或兼容版本
+- DeepSeek Harness 0.1.0-rc.6（当前测试版本）或兼容版本
 
 ## 安装
 
-### 本地开发版本
+### 从源码安装（当前推荐）
 
 ```sh
 git clone https://github.com/yanglongyun/dsh-ramify.git
@@ -34,21 +57,21 @@ npm install
 npm run build
 
 dsh plugin --profile web add "$PWD"
-dsh web
+dsh web --port 3099
 ```
 
-### npm 发布后
+### npm 包发布后
 
 ```sh
 dsh plugin --profile web add @ramify/dsh-ramify
-dsh web
+dsh web --port 3099
 ```
 
-启动后可直接点击 DSH 左侧栏底部的 **Ramify** 打开内置工作台。Agent 的工具结果只引导用户使用这个内置入口，不暴露底层 loopback 地址。工作台顶部仍保留“在新窗口打开”按钮，作为可选的独立窗口模式。
+启动后点击 DSH 左侧栏底部的 **Ramify**。插件会自动启动绑定在 loopback 的运行时，并把工作台嵌入 DSH 覆层；顶部的外部打开按钮仅作为可选的独立窗口模式。
 
 ## 使用
 
-向 DSH Agent 描述一个适合比较多个方向的任务，例如：
+你可以直接从 Ramify 输入框开始，也可以在 DSH 对话中要求 Agent 使用 Ramify。例如：
 
 > 使用 Ramify 为这个 AI 搜索产品探索三个明显不同的落地页方向，做出可预览页面让我比较。
 
@@ -65,6 +88,25 @@ dsh web
 | `ramify_node_complete` | 写入 HTML、Markdown、SVG 或媒体作品 |
 | `ramify_node_update` | 更新标题、文本或树位置 |
 | `ramify_settings` | 切换主题和界面语言 |
+
+## 架构
+
+```text
+Ramify UI (DSH overlay iframe)
+        │ 结构化创建/分支意图
+        ▼
+DSH Client UI 会话桥 ──► 当前 DSH 会话与模型
+        │                         │
+        │ SSE 实时更新            │ Ramify tools
+        ▼                         ▼
+本地 Ramify runtime ◄──── 项目、节点与作品
+        │
+        └── SQLite + 本地 artifact 文件
+```
+
+- DSH Web UI：默认 `http://127.0.0.1:3099`
+- Ramify runtime：默认 `http://127.0.0.1:9519`
+- 两个服务都只监听本机；作品 iframe 使用 CSP 明确允许本机 DSH 嵌入。
 
 ## 配置
 
@@ -98,9 +140,24 @@ npm run build
 npm pack --dry-run
 ```
 
+一条命令执行完整检查：
+
+```sh
+npm run check
+```
+
+检查内容包括 TypeScript、插件测试、Ramify runtime/UI 测试、生产构建和 npm 包内容验证。
+
 构建产物 `lib/` 与 `app/dist/` 会提交到仓库，因此从本地 checkout 或 Git 安装时不需要执行安装期构建脚本。
 
-浏览器端通过包清单中的 `dsh.client` 声明加载，界面只注册 DSH 提供的 `sidebar.footer.action` 与 `shell.overlay` 插槽，并复用 Harness 提供的 React 运行时。
+浏览器端通过包清单中的 `dsh.client` 声明加载，使用 DSH 提供的侧栏、覆层、工具卡和会话输入插槽，并复用 Harness 提供的 React 运行时。npm 关键字和 GitHub Topic 均包含 **`dsh-plugin`**。
+
+## 数据与安全
+
+- 默认数据保存在操作系统应用数据目录，升级或重启不会清空。
+- 插件不读取、不接收也不保存模型 API Key；模型调用由当前 DSH 会话负责。
+- Runtime 默认仅绑定 `127.0.0.1`，并校验 Host，避免意外暴露到公网。
+- Artifact 预览运行在受限 iframe 中，使用独立 CSP 与 sandbox。
 
 ## 许可证
 

@@ -1,14 +1,17 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BrandMark } from '../components/BrandMark';
 import { EmptyProjectState } from '../components/home/EmptyProjectState';
 import { HomeHeader } from '../components/home/HomeHeader';
+import { HomeComposer } from '../components/home/HomeComposer';
 import { HowToDialog } from '../components/home/HowToDialog';
 import { ProjectCard } from '../components/home/ProjectCard';
 import { useProjects } from '../hooks/useProjects';
 import { api } from '../api';
 import type { Id } from '../types';
 import { useI18n } from '../components/I18nProvider';
+import { randomPlant } from '../components/Plants';
+import { isDshEmbedded, submitToDsh } from '../lib/dshBridge';
 import '../styles/pages/ProjectList.css';
 
 const PAGE_SIZE = 12;
@@ -19,6 +22,13 @@ export function ProjectList() {
   const { projects, loading, reload } = useProjects();
   const [page, setPage] = useState(0);
   const [howOpen, setHowOpen] = useState(false);
+  const embedded = isDshEmbedded();
+  const plant = useMemo(() => randomPlant(), []);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+  const [prompt, setPrompt] = useState('');
+  const [count, setCount] = useState(3);
+  const [creating, setCreating] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const closeHow = useCallback(() => setHowOpen(false), []);
 
@@ -27,6 +37,23 @@ export function ProjectList() {
     if (!confirm(t('home.deleteConfirm'))) return;
     await api.deleteProject(id);
     void reload();
+  }
+
+  async function submitCreate() {
+    const value = prompt.trim();
+    if (!value || creating) return;
+    setCreating(true);
+    setSubmitError('');
+    try {
+      const project = await api.createProject(value);
+      setPrompt('');
+      navigate(`/projects/${project.id}`);
+      await submitToDsh({ action: 'create', projectId: project.id, rootId: project.rootId, prompt: value, count });
+    } catch {
+      setSubmitError(t('dsh.noSession'));
+    } finally {
+      setCreating(false);
+    }
   }
 
   const totalPages = Math.max(1, Math.ceil(projects.length / PAGE_SIZE));
@@ -38,7 +65,9 @@ export function ProjectList() {
       <div className="bd-corner"><BrandMark size={20} /><b>Ramify</b></div>
       <button className="bd-help-entry" onClick={() => setHowOpen(true)}><span>?</span>{t('home.help')}</button>
       <main className="bd-board">
-        <HomeHeader />
+        {embedded ? <HomeComposer prompt={prompt} promptRef={promptRef} plant={plant} count={count}
+          creating={creating} error={submitError} onPromptChange={setPrompt} onCountChange={setCount}
+          onSubmit={() => void submitCreate()} /> : <HomeHeader />}
         {loading && projects.length === 0 ? <div className="bd-empty">{t('home.loading')}</div>
           : projects.length === 0 ? <EmptyProjectState />
             : <>

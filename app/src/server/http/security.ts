@@ -1,5 +1,7 @@
 import type { IncomingMessage } from 'node:http';
 
+export const LOCAL_FRAME_ANCESTORS = "frame-ancestors 'self' http://127.0.0.1:* http://localhost:*";
+
 export const BASE_SECURITY_HEADERS: Record<string, string> = {
   'Cross-Origin-Resource-Policy': 'same-origin',
   'Referrer-Policy': 'no-referrer',
@@ -11,7 +13,7 @@ export const UI_CONTENT_SECURITY_POLICY = [
   "base-uri 'none'",
   "connect-src 'self'",
   "font-src 'self' data:",
-  "frame-ancestors 'self' http://127.0.0.1:* http://localhost:*",
+  LOCAL_FRAME_ANCESTORS,
   "frame-src 'self' data: blob:",
   "img-src 'self' data: blob:",
   "object-src 'none'",

@@ -61,6 +61,7 @@ var Router = class {
 };
 
 // src/server/http/security.ts
+var LOCAL_FRAME_ANCESTORS = "frame-ancestors 'self' http://127.0.0.1:* http://localhost:*";
 var BASE_SECURITY_HEADERS = {
   "Cross-Origin-Resource-Policy": "same-origin",
   "Referrer-Policy": "no-referrer",
@@ -71,7 +72,7 @@ var UI_CONTENT_SECURITY_POLICY = [
   "base-uri 'none'",
   "connect-src 'self'",
   "font-src 'self' data:",
-  "frame-ancestors 'self' http://127.0.0.1:* http://localhost:*",
+  LOCAL_FRAME_ANCESTORS,
   "frame-src 'self' data: blob:",
   "img-src 'self' data: blob:",
   "object-src 'none'",
@@ -384,8 +385,7 @@ function registerNodeRoutes(router, service) {
     const revision = new URL(req.url ?? "", "http://127.0.0.1").searchParams.get("revision");
     sendText(res, 200, artifact.document, "text/html; charset=utf-8", {
       "Cache-Control": revision ? "private, max-age=31536000, immutable" : "no-store",
-      "Content-Security-Policy": `${artifact.policy}; sandbox allow-scripts`,
-      "X-Frame-Options": "SAMEORIGIN"
+      "Content-Security-Policy": `${artifact.policy}; ${LOCAL_FRAME_ANCESTORS}; sandbox allow-scripts`
     });
   });
   router.get("/api/nodes/:nodeId/content", ({ res, params }) => {

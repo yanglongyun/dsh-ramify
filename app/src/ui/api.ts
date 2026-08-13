@@ -1,5 +1,5 @@
 import type { AppSettings, Locale, ThemePreference } from '../shared/types';
-import type { Project, Tree } from './types';
+import type { CreatedProject, Project, Tree } from './types';
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -20,11 +20,17 @@ export const api = {
     method: 'PUT', body: JSON.stringify({ locale }),
   }),
   listProjects: () => req<Project[]>('/api/projects'),
+  createProject: (prompt: string) => req<CreatedProject>('/api/projects', {
+    method: 'POST', body: JSON.stringify({ prompt }),
+  }),
   deleteProject: (id: string) => req<{ ok: true }>(`/api/projects/${id}`, { method: 'DELETE' }),
   markNodeError: (id: string, error: string) => req<{ ok: true }>(`/api/nodes/${id}/artifact/error`, { method: 'PUT', body: JSON.stringify({ error }) }),
   tree: (id: string) => req<Tree>(`/api/projects/${id}/tree`),
-  nodeHtmlUrl: (nodeId: string, revision?: string) =>
-    `/api/nodes/${nodeId}/html${revision ? `?revision=${encodeURIComponent(revision)}` : ''}`,
+  nodeHtmlUrl: (nodeId: string, revision?: string) => {
+    const query = new URLSearchParams({ embed: '2' });
+    if (revision) query.set('revision', revision);
+    return `/api/nodes/${nodeId}/html?${query}`;
+  },
   nodeArtifactUrl: (nodeId: string) => `/api/nodes/${nodeId}/artifact`,
   eventsUrl: (projectId?: string) => (projectId ? `/api/events?project=${projectId}` : '/api/events'),
   nodeArtifactSource: async (nodeId: string) => {

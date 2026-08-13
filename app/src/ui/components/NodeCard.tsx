@@ -15,6 +15,14 @@ function plantOf(id: Id) {
   return PLANTS[h % PLANTS.length];
 }
 
+function BranchIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 20v-6M12 14c0-4 3-6 7-6M12 14c0-3-2-5-5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 type Props = {
   node: TreeNode;
   seq: number;
@@ -25,11 +33,12 @@ type Props = {
   hasChildren: boolean;
   renderPreview: boolean;
   onClick: (id: Id) => void;
+  onBranch?: (id: Id) => void;
   onToggle: (id: Id) => void;
 };
 
 export const NodeCard = memo(function NodeCard({
-  node, seq, pos, selected, collapsed, hiddenCount, hasChildren, renderPreview, onClick, onToggle,
+  node, seq, pos, selected, collapsed, hiddenCount, hasChildren, renderPreview, onClick, onBranch, onToggle,
 }: Props) {
   const { t } = useI18n();
   const isRoot = node.parent_id === null;
@@ -47,6 +56,7 @@ export const NodeCard = memo(function NodeCard({
         style={{ transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)`, position: 'absolute' }}
         onClick={(e) => { e.stopPropagation(); onClick(node.id); }}
       >
+        {onBranch && <button className="cb-node-branch" title={isRoot ? t('dsh.branchRoot') : t('dsh.branchNode')} onClick={(e) => { e.stopPropagation(); onBranch(node.id); }}><BranchIcon /></button>}
         {hasChildren && (
           <button className={`cb-node-collapse${collapsed ? ' is-collapsed' : ''}`} title={collapsed ? t('node.expand', { count: hiddenCount }) : t('node.collapse')} onClick={(e) => { e.stopPropagation(); onToggle(node.id); }}>{collapsed ? hiddenCount : '−'}</button>
         )}
@@ -64,6 +74,7 @@ export const NodeCard = memo(function NodeCard({
         style={{ transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)`, position: 'absolute' }}
         onClick={(e) => { e.stopPropagation(); onClick(node.id); }}
       >
+        {onBranch && <button className="cb-node-branch" title={t('dsh.branchNode')} onClick={(e) => { e.stopPropagation(); onBranch(node.id); }}><BranchIcon /></button>}
         {hasChildren && (
           <button className={`cb-node-collapse${collapsed ? ' is-collapsed' : ''}`} title={collapsed ? t('node.expand', { count: hiddenCount }) : t('node.collapse')} onClick={(e) => { e.stopPropagation(); onToggle(node.id); }}>{collapsed ? hiddenCount : '−'}</button>
         )}
@@ -83,6 +94,11 @@ export const NodeCard = memo(function NodeCard({
       style={{ transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)`, position: 'absolute' }}
       onClick={(e) => { e.stopPropagation(); onClick(node.id); }}
     >
+      {onBranch && hasArtifact && (
+        <button className="cb-node-branch" title={t('dsh.branchNode')} onClick={(e) => { e.stopPropagation(); onBranch(node.id); }}>
+          <BranchIcon />
+        </button>
+      )}
       {hasChildren && (
         <button
           className={`cb-node-collapse${collapsed ? ' is-collapsed' : ''}`}

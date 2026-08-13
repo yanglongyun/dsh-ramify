@@ -1,9 +1,11 @@
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
+import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import type {} from '@deepseek-ai/dsh-client-ui-tool/client'
 import { RamifySidebarAction, RamifyWorkspaceOverlay } from './RamifySurface.js'
 import { RamifyProjectToolCard } from './RamifyToolCard.js'
+import { RamifySessionBridge } from './RamifySessionBridge.js'
 import { installRamifyStyles } from './styles.js'
 
 export const inject = ['slots']
@@ -30,6 +32,11 @@ export function apply(ctx: ClientContext): void {
     name: 'tool.call.toolview',
     key: 'ramify_project_create',
   }, RamifyProjectToolCard))
+
+  ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
+    name: 'conversation.input.dock',
+    id: 'ramify-session-bridge',
+  }, RamifySessionBridge))
 }
 
 export { RamifySidebarAction, RamifyWorkspaceOverlay } from './RamifySurface.js'

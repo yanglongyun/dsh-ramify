@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import type { IncomingMessage } from 'node:http';
 import test from 'node:test';
-import { isAllowedHost, UI_CONTENT_SECURITY_POLICY } from './security.js';
+import { isAllowedHost, LOCAL_FRAME_ANCESTORS, UI_CONTENT_SECURITY_POLICY } from './security.js';
 
 const request = (host?: string) => ({ headers: { host } }) as IncomingMessage;
 
@@ -26,6 +26,6 @@ test('supports an explicit host allowlist', () => {
 });
 
 test('allows embedding only from a loopback DSH web surface', () => {
-  assert.match(UI_CONTENT_SECURITY_POLICY, /frame-ancestors 'self' http:\/\/127\.0\.0\.1:\* http:\/\/localhost:\*/);
+  assert.ok(UI_CONTENT_SECURITY_POLICY.includes(LOCAL_FRAME_ANCESTORS));
   assert.doesNotMatch(UI_CONTENT_SECURITY_POLICY, /frame-ancestors 'none'/);
 });

@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import {
   ramifyWorkspaceOpen,
+  setRamifyWorkspaceFrame,
   setRamifyWorkspaceOpen,
   subscribeRamifyWorkspace,
 } from './store.js'
@@ -95,6 +96,7 @@ export function RamifyWorkspaceOverlay(): ReactNode {
             </div>
           ) : null}
           <iframe
+            ref={(frame) => { setRamifyWorkspaceFrame(frame?.contentWindow ?? null) }}
             className={`ramify-frame${ready ? ' ramify-frame--ready' : ''}`}
             src={RAMIFY_URL}
             title="Ramify 工作台"

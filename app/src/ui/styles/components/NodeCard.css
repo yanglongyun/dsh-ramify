@@ -111,7 +111,19 @@
 .cb-node-type.is-svg { color: #2f7a52; background: #e6f4ec; border-color: #cfe8da; }
 .cb-node-credits { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--ink-3); flex: none; }
 
-/* 子树收起 */
+/* 节点悬浮按钮:发散 / 收起 */
+.cb-node-branch {
+  position: absolute; right: -12px; top: -12px; z-index: 6;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: none; background: linear-gradient(155deg, var(--accent-2), var(--accent)); color: #fff;
+  box-shadow: 0 2px 6px rgba(179,73,47,.32), 0 0 0 3px var(--panel);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transform: scale(.82);
+  transition: opacity .14s, transform .14s cubic-bezier(.34, 1.56, .64, 1), box-shadow .14s;
+}
+.cb-node:hover .cb-node-branch, .cb-node.is-selected .cb-node-branch { opacity: 1; transform: scale(1); }
+.cb-node-branch:hover { box-shadow: 0 4px 12px rgba(179,73,47,.45), 0 0 0 3px var(--panel); transform: scale(1.08); }
+
 .cb-node-collapse {
   position: absolute; right: -12px; top: 50%; transform: translateY(-50%); z-index: 5;
   width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; line-height: 1;

@@ -4,6 +4,7 @@ import { api } from '../api';
 import { BrandMark } from '../components/BrandMark';
 import { Minimap } from '../components/Minimap';
 import { NodeCard } from '../components/NodeCard';
+import { ChatBubble } from '../components/ChatBubble';
 import { PreviewPanel } from '../components/canvas/PreviewPanel';
 import { useCanvasViewport } from '../hooks/useCanvasViewport';
 import { useProjectTree } from '../hooks/useProjectTree';
@@ -11,6 +12,7 @@ import { edgePath, layoutTree } from '../lib/layout';
 import type { Id } from '../types';
 import { isArtifactType } from '../../shared/types';
 import { useI18n } from '../components/I18nProvider';
+import { isDshEmbedded, submitToDsh } from '../lib/dshBridge';
 import '../styles/pages/Canvas.css';
 
 const RENDER_OVERSCAN_PX = 700;
@@ -37,6 +39,7 @@ export default function Canvas() {
   const { tree, nodes } = useProjectTree(projectId);
   const [selectedId, setSelectedId] = useState<Id | null>(null);
   const [previewId, setPreviewId] = useState<Id | null>(null);
+  const [bubbleOpen, setBubbleOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const focusPending = useRef(searchParams.get('focus'));
 
@@ -86,7 +89,7 @@ export default function Canvas() {
   }, [childrenMap]);
 
   const positions = useMemo(() => layoutTree(visibleNodes), [visibleNodes]);
-  const clearSelection = useCallback(() => setSelectedId(null), []);
+  const clearSelection = useCallback(() => { setSelectedId(null); setBubbleOpen(false); }, []);
   const viewport = useCanvasViewport(positions, clearSelection);
 
   const renderRect = useMemo(() => {
@@ -136,11 +139,13 @@ export default function Canvas() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-      if (previewId) setPreviewId(null); else setSelectedId(null);
+      if (bubbleOpen) setBubbleOpen(false);
+      else if (previewId) setPreviewId(null);
+      else setSelectedId(null);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [previewId]);
+  }, [previewId, bubbleOpen]);
 
   const highlightedEdges = useMemo(() => {
     const edges = new Set<Id>();
@@ -157,9 +162,30 @@ export default function Canvas() {
     const node = byId.get(id);
     if (!node) return;
     setSelectedId(id);
+    if (node.parent_id === null && isDshEmbedded()) {
+      setPreviewId(null);
+      setBubbleOpen(true);
+      return;
+    }
+    setBubbleOpen(false);
     if (isArtifactType(node.type) && !node.content) { setPreviewId(null); showToast(t('canvas.artifactGenerating')); return; }
     if (node.type === 'error') { setPreviewId(null); showToast(node.content || t('canvas.artifactFailed')); return; }
     setPreviewId(node.type === 'text' ? node.content ? id : null : isArtifactType(node.type) && node.content ? id : null);
+  }
+
+  function onNodeBranch(id: Id) {
+    setSelectedId(id);
+    setBubbleOpen(true);
+  }
+
+  function submitBranch(prompt: string, count: number) {
+    if (!selectedId) return;
+    const parent = byId.get(selectedId);
+    if (!parent) return;
+    setBubbleOpen(false);
+    void submitToDsh({ action: 'branch', projectId, nodeId: parent.id, nodeTitle: parent.title, prompt, count })
+      .then(() => showToast(t('dsh.accepted')))
+      .catch(() => showToast(t('dsh.noSession')));
   }
 
   const doneCount = nodes.filter((node) => isArtifactType(node.type) && node.content).length;
@@ -191,8 +217,13 @@ export default function Canvas() {
               selected={node.id === selectedId} collapsed={collapsed.has(node.id)}
               hiddenCount={collapsed.has(node.id) ? descendantCount(node.id) : 0}
               hasChildren={(childrenMap.get(node.id) ?? []).length > 0}
-              renderPreview={thumbIds.has(node.id)} onClick={onNodeClick} onToggle={toggleCollapse} />;
+              renderPreview={thumbIds.has(node.id)} onClick={onNodeClick}
+              onBranch={isDshEmbedded() ? onNodeBranch : undefined} onToggle={toggleCollapse} />;
           })}
+          {bubbleOpen && selectedId && byId.get(selectedId) && positions.get(selectedId) && (
+            <ChatBubble key={selectedId} node={byId.get(selectedId)!} pos={positions.get(selectedId)!}
+              onSubmit={submitBranch} onClose={() => setBubbleOpen(false)} />
+          )}
         </div>
         <div className="cb-zoom">
           <button onClick={() => viewport.zoomAt(viewport.canvasSize.w / 2, viewport.canvasSize.h / 2, viewport.view.k / 1.25)}>−</button>
