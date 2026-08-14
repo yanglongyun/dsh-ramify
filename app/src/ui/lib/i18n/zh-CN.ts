@@ -14,6 +14,7 @@ export const zhCN = {
   'how.command': '例如：为一款番茄钟设计三套风格明显不同、可以直接交互的网页方案。',
   'how.outro': '画布会先出现对应数量的“生成中”节点，当前 DSH 会话和模型会逐一完成它们。想继续修改时，点击节点右上角的发散按钮，描述新方向即可。',
   'how.ok': '开始创作',
+  'how.source': '查看开源项目',
   'empty.aria': '创作示例',
   'empty.landingTitle': '你的第一个落地页',
   'empty.landingMemo': '试着说：“帮我出三版手冲咖啡品牌的落地页”',

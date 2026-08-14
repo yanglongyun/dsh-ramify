@@ -30,15 +30,15 @@ export function ChatBubble({ node, pos, onSubmit, onClose }: {
   return (
     <div className="cb-branch-panel" style={{ ...bubblePos, width: 280, ['--arrow-top' as string]: `${arrowTop}px` }}
       onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-      <div className="cb-branch-head">{isRoot ? '从原始需求继续发散' : `基于“${node.title}”继续发散`}</div>
+      <div className="cb-branch-head">{isRoot ? t('dsh.branchRoot') : t('dsh.branchNode', { title: node.title })}</div>
       <textarea ref={ref} value={text} onChange={(e) => setText(e.target.value)}
-        placeholder={isRoot ? '描述下一轮要探索的方向…' : '描述你想怎么修改这个版本…'}
+        placeholder={t('dsh.branchPlaceholder')}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submit(); }
           if (e.key === 'Escape') onClose();
         }} />
       <div className="cb-branch-row"><CountPicker value={count} onChange={setCount} /></div>
-      <button className="cb-button cb-button-primary cb-branch-submit" onClick={submit}>{count > 1 ? `生成 ${count} 个分支` : '生成一个分支'}</button>
+      <button className="cb-button cb-button-primary cb-branch-submit" onClick={submit}>{t('dsh.branch')} · {count}</button>
     </div>
   );
 }

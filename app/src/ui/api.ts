@@ -1,4 +1,4 @@
-import type { AppSettings, Locale, ThemePreference } from '../shared/types';
+import type { AppSettings, LocalePreference, ThemePreference } from '../shared/types';
 import type { CreatedProject, Project, Tree } from './types';
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
@@ -16,7 +16,7 @@ export const api = {
   updateTheme: (theme: ThemePreference) => req<AppSettings>('/api/settings/theme', {
     method: 'PUT', body: JSON.stringify({ theme }),
   }),
-  updateLocale: (locale: Locale) => req<AppSettings>('/api/settings/locale', {
+  updateLocale: (locale: LocalePreference) => req<AppSettings>('/api/settings/locale', {
     method: 'PUT', body: JSON.stringify({ locale }),
   }),
   listProjects: () => req<Project[]>('/api/projects'),

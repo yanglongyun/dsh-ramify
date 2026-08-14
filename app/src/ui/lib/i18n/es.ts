@@ -16,6 +16,7 @@ export const es: Messages = {
   'how.command': 'Ejemplo: Diseña tres páginas web interactivas y visualmente distintas para un temporizador Pomodoro.',
   'how.outro': 'El lienzo muestra primero un nodo en generación por dirección. La sesión y el modelo actuales de DSH los completan allí mismo. Para iterar, usa el botón de ramificación del nodo.',
   'how.ok': 'Empezar a crear',
+  'how.source': 'Ver en GitHub',
   'empty.aria': 'Ejemplos creativos',
   'empty.landingTitle': 'Tu primera landing page',
   'empty.landingMemo': 'Prueba: «Crea tres landing pages para una marca de café de filtro».',

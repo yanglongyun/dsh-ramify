@@ -16,7 +16,12 @@
 .bd-how-guide p { margin: 0; color: var(--ink-2); font-size: 12.5px; line-height: 1.8; }
 .bd-how-guide > p:first-child { color: var(--ink); font-size: 14px; }
 .bd-how-command { padding: 14px 17px; border-radius: 5px 13px 13px 13px; background: #443527; color: #f3efe8; font-family: var(--serif); font-size: 13px; line-height: 1.75; }
-.bd-how-actions { display: flex; align-items: center; justify-content: center; margin-top: 22px; }
+.bd-how-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 22px; }
+.bd-how-actions .is-source {
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 17px; border: 1px solid #cfc3ad; border-radius: 10px;
+  color: var(--ink-2); font-size: 12.5px; font-weight: 750; text-decoration: none; transition: border-color .16s ease, color .16s ease, background .16s ease;
+}
+.bd-how-actions .is-source:hover { border-color: var(--accent); background: rgba(217,91,87,.07); color: var(--accent-ink); }
 .bd-how-actions .is-main { padding: 10px 24px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 800; }
 @keyframes bd-how-veil-in { from { opacity: 0; } }
 @keyframes bd-how-in { from { opacity: 0; transform: translateY(10px) scale(.98); } }

@@ -42,6 +42,14 @@ describe('Ramify tools', () => {
     expect(sections).toHaveLength(1)
     expect(sections[0]?.name).toBe('tool:ramify')
     expect(sections[0]?.text).toContain('multiple creative directions')
+    expect(sections[0]?.text).toContain('Use title cards')
+    expect(sections[0]?.text).toContain('Use note cards')
+
+    const add = tools.find(tool => tool.name === 'ramify_node_add')
+    const parameters = add?.parameters as { required?: string[]; properties?: { cardType?: { enum?: string[] } } }
+    const cardType = parameters.properties?.cardType
+    expect(parameters.required).toContain('cardType')
+    expect(cardType?.enum).toEqual(['title', 'note', 'html', 'markdown', 'svg', 'image', 'video', 'audio'])
   })
 
   it('maps project creation to the local API without exposing the loopback service URL', async () => {
@@ -67,5 +75,34 @@ describe('Ramify tools', () => {
       title: 'Three directions',
     })
     expect(request).toHaveBeenCalledWith('/api/projects', expect.objectContaining({ method: 'POST' }), expect.any(AbortSignal))
+  })
+
+  it('maps explicit title, note, and artifact card types to the node API', async () => {
+    const { ctx, tools } = harness()
+    const request = vi.fn().mockResolvedValue({ id: 'node-1' })
+    registerRamifyTools(ctx, { request } as unknown as RamifyRuntime)
+    const tool = tools.find(candidate => candidate.name === 'ramify_node_add')
+    const signal = new AbortController().signal
+
+    await tool?.execute({ projectId: 'p', parentId: 'root', title: 'Round 2', cardType: 'title' }, { signal } as never)
+    await tool?.execute({ projectId: 'p', parentId: 'root', title: 'Insight', cardType: 'note', content: 'Keep the hierarchy shallow.' }, { signal } as never)
+    await tool?.execute({ projectId: 'p', parentId: 'root', title: 'Landing page', cardType: 'html' }, { signal } as never)
+
+    const bodies = request.mock.calls.map((call) => JSON.parse(call[1].body as string))
+    expect(bodies).toEqual([
+      { parentId: 'root', title: 'Round 2' },
+      { parentId: 'root', title: 'Insight', content: 'Keep the hierarchy shallow.' },
+      { parentId: 'root', title: 'Landing page', artifactType: 'html' },
+    ])
+  })
+
+  it('rejects invalid content for explicit card types', async () => {
+    const { ctx, tools } = harness()
+    registerRamifyTools(ctx, { request: vi.fn() } as unknown as RamifyRuntime)
+    const tool = tools.find(candidate => candidate.name === 'ramify_node_add')
+    const exec = { signal: new AbortController().signal } as never
+
+    await expect(tool?.execute({ projectId: 'p', parentId: 'root', title: 'Empty', cardType: 'note' }, exec)).rejects.toThrow('note cards require non-empty content')
+    await expect(tool?.execute({ projectId: 'p', parentId: 'root', title: 'Wrong', cardType: 'title', content: 'No body' }, exec)).rejects.toThrow('title cards accept only a title')
   })
 })

@@ -16,6 +16,7 @@ export const ja: Messages = {
   'how.command': '例：ポモドーロタイマーの、見た目が明確に異なる操作可能な Web ページを3案デザインする。',
   'how.outro': 'キャンバスには案の数だけ生成中ノードが先に現れ、現在の DSH セッションとモデルが順番に完成させます。修正するにはノードの分岐ボタンから次の方向を入力します。',
   'how.ok': '作成を始める',
+  'how.source': 'GitHub で見る',
   'empty.aria': '制作例',
   'empty.landingTitle': '最初のランディングページ',
   'empty.landingMemo': '例：「ハンドドリップコーヒーブランドの LP を3案作って」',

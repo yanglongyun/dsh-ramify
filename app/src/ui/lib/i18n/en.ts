@@ -16,6 +16,7 @@ export const en: Messages = {
   'how.command': 'Example: Design three visually distinct, fully interactive web pages for a Pomodoro timer.',
   'how.outro': 'The canvas first shows one generating node per direction. Your current DSH session and model complete them in place. To refine a result, use the branch button on its node and describe the next direction.',
   'how.ok': 'Start creating',
+  'how.source': 'View on GitHub',
   'empty.aria': 'Creative examples',
   'empty.landingTitle': 'Your first landing page',
   'empty.landingMemo': 'Try: “Create three landing pages for a pour-over coffee brand.”',

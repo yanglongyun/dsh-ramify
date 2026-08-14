@@ -4,8 +4,34 @@ import type {} from '@deepseek-ai/dsh-system-prompt'
 import type { RamifyRuntime } from './runtime.js'
 
 const ARTIFACT_TYPES = ['html', 'markdown', 'svg', 'image', 'video', 'audio'] as const
+const CARD_TYPES = ['title', 'note', ...ARTIFACT_TYPES] as const
 const THEMES = ['light', 'dark', 'system'] as const
-const LOCALES = ['zh-CN', 'en', 'ja', 'es', 'de'] as const
+const LOCALES = ['system', 'zh-CN', 'en', 'ja', 'es', 'de'] as const
+
+type CardType = (typeof CARD_TYPES)[number]
+
+function cardFields(input: { cardType: CardType; content?: string; artifact?: string }) {
+  if (input.cardType === 'title') {
+    if (input.content !== undefined || input.artifact !== undefined) {
+      throw new Error('Ramify title cards accept only a title')
+    }
+    return {}
+  }
+  if (input.cardType === 'note') {
+    if (input.content === undefined || !input.content.trim()) {
+      throw new Error('Ramify note cards require non-empty content')
+    }
+    if (input.artifact !== undefined) throw new Error('Ramify note cards do not accept artifact source')
+    return { content: input.content }
+  }
+  if (input.content !== undefined) {
+    throw new Error(`Ramify ${input.cardType} cards do not accept inline note content`)
+  }
+  return {
+    artifactType: input.cardType,
+    ...(input.artifact === undefined ? {} : { artifact: input.artifact }),
+  }
+}
 
 const PROJECT_SCHEMA = {
   type: 'object',
@@ -115,7 +141,10 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
     order: 160,
     text: [
       'Use Ramify when the user wants multiple creative directions, visual comparison, or branching revisions.',
-      'Create the project first, tell the user it is available from the Ramify entry in the DSH sidebar, batch-create a balanced tree of titled placeholders, then complete nodes incrementally.',
+      'Create the project first, tell the user it is available from the Ramify entry in the DSH sidebar, then build a balanced tree with the appropriate cardType for every node.',
+      'Use title cards as compact hierarchy, round, category, or decision-point capsules. Use note cards for briefs, constraints, observations, rationale, copy, summaries, and other concise text that should remain visible on the canvas.',
+      'Use HTML, Markdown, SVG, image, video, or audio cards only for actual rendered deliverables. Mix title, note, and artifact cards when that makes the canvas easier to scan; do not turn every thought into an artifact.',
+      'Artifact cards may be created without artifact source as visible generating placeholders and completed incrementally with ramify_node_complete. Title cards have no content; note cards require content.',
       'Preserve alternatives: meaningful revisions become child nodes; later rounds belong under a titled round node instead of flattening every version under one parent.',
       'Ramify is a local presentation and versioning surface. You remain responsible for authoring every artifact.',
       'Never present the loopback Ramify service URL as the primary result. The integrated DSH workspace is the primary UI; the standalone URL is only an implementation detail and optional fallback.',
@@ -256,15 +285,15 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
 
   ctx.tools.register(defineTool({
     name: 'ramify_node_add',
-    description: 'Add one child node. Set artifactType without artifact to create a visible generating placeholder, then finish it with ramify_node_complete.',
+    description: 'Add one child card with an explicit visual type. Use title for a compact hierarchy capsule, note for a taped text card, or an artifact card type for a rendered deliverable.',
     parameters: {
       projectId: { type: 'string', required: true },
       parentId: { type: 'string', required: true },
       title: { type: 'string', required: true },
       position: { type: 'integer' },
-      content: { type: 'string', description: 'Inline text content; do not combine with artifactType.' },
-      artifactType: { type: 'string', enum: [...ARTIFACT_TYPES] },
-      artifact: { type: 'string', description: 'Optional artifact source; requires artifactType.' },
+      cardType: { type: 'string', required: true, enum: [...CARD_TYPES], description: 'Visual card form. title is a compact capsule; note is a taped text card; the remaining values are rendered artifact cards.' },
+      content: { type: 'string', description: 'Required only for note cards. Keep it concise enough to scan directly on the canvas.' },
+      artifact: { type: 'string', description: 'Optional source for artifact cards. Omit it to create a visible generating placeholder.' },
     },
     output: {
       schema: {
@@ -283,9 +312,7 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
           parentId: args.parentId,
           title: args.title,
           ...(args.position === undefined ? {} : { position: args.position }),
-          ...(args.content === undefined ? {} : { content: args.content }),
-          ...(args.artifactType === undefined ? {} : { artifactType: args.artifactType }),
-          ...(args.artifact === undefined ? {} : { artifact: args.artifact }),
+          ...cardFields(args),
         }),
       }, exec.signal), 'node creation')
       return { id: stringValue(result, 'id', 'node creation') }
@@ -295,7 +322,7 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
 
   ctx.tools.register(defineTool({
     name: 'ramify_node_batch',
-    description: 'Atomically create up to 100 Ramify nodes. Use unique keys and parentKey to build a balanced multi-level tree in one call.',
+    description: 'Atomically create up to 100 explicitly typed Ramify cards. Combine title capsules, note cards, and artifact cards to build a balanced, readable multi-level tree.',
     parameters: {
       projectId: { type: 'string', required: true },
       nodes: {
@@ -310,9 +337,9 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
             parentKey: { type: 'string', description: 'Key of a preceding node in this batch.' },
             title: { type: 'string', required: true },
             position: { type: 'integer' },
-            content: { type: 'string' },
-            artifactType: { type: 'string', enum: [...ARTIFACT_TYPES] },
-            artifact: { type: 'string' },
+            cardType: { type: 'string', required: true, enum: [...CARD_TYPES], description: 'title capsule, note card, or rendered artifact card type.' },
+            content: { type: 'string', description: 'Required only for note cards.' },
+            artifact: { type: 'string', description: 'Optional source for artifact cards; omit for a generating placeholder.' },
           },
         },
       },
@@ -339,14 +366,22 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
       render: (_args, value) => [{ type: 'text', text: `Created ${value.nodes.length} Ramify nodes. The integrated workspace updates automatically.` }],
     },
     async execute(args, exec) {
+      const requestNodes = args.nodes.map(node => ({
+        key: node.key,
+        ...(node.parentId === undefined ? {} : { parentId: node.parentId }),
+        ...(node.parentKey === undefined ? {} : { parentKey: node.parentKey }),
+        title: node.title,
+        ...(node.position === undefined ? {} : { position: node.position }),
+        ...cardFields(node),
+      }))
       const result = objectValue(await runtime.request(`/api/projects/${encodeURIComponent(args.projectId)}/nodes/batch`, {
         method: 'POST',
-        body: jsonBody({ nodes: args.nodes }),
+        body: jsonBody({ nodes: requestNodes }),
       }, exec.signal), 'batch node creation')
-      const nodes = result.nodes
-      if (!Array.isArray(nodes)) throw new Error('Ramify batch response is missing nodes')
+      const responseNodes = result.nodes
+      if (!Array.isArray(responseNodes)) throw new Error('Ramify batch response is missing nodes')
       return {
-        nodes: nodes.map((value) => {
+        nodes: responseNodes.map((value) => {
           const node = objectValue(value, 'batch node creation')
           return {
             key: stringValue(node, 'key', 'batch node creation'),
@@ -433,7 +468,7 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
 
   ctx.tools.register(defineTool({
     name: 'ramify_settings',
-    description: 'Change the Ramify canvas theme or interface language. Open canvases update immediately.',
+    description: 'Change the Ramify canvas theme or interface language. Use system to follow the current DSH theme or language. Open canvases update immediately.',
     parameters: {
       theme: { type: 'string', enum: [...THEMES] },
       locale: { type: 'string', enum: [...LOCALES] },

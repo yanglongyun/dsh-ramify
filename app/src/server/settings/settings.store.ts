@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AppSettings } from '../../shared/types.js';
-import { isLocale, isThemePreference } from '../../shared/types.js';
+import { isLocalePreference, isThemePreference } from '../../shared/types.js';
 import { dataDirectory } from '../data-directory.js';
 
-const DEFAULT_SETTINGS: AppSettings = { theme: 'system', locale: 'zh-CN' };
+const DEFAULT_SETTINGS: AppSettings = { theme: 'system', locale: 'system' };
 
 export class SettingsStore {
   private readonly file: string;
@@ -20,7 +20,7 @@ export class SettingsStore {
       const value = JSON.parse(readFileSync(this.file, 'utf8')) as Record<string, unknown>;
       return {
         theme: isThemePreference(value.theme) ? value.theme : DEFAULT_SETTINGS.theme,
-        locale: isLocale(value.locale) ? value.locale : DEFAULT_SETTINGS.locale,
+        locale: isLocalePreference(value.locale) ? value.locale : DEFAULT_SETTINGS.locale,
       };
     } catch {
       return { ...DEFAULT_SETTINGS };

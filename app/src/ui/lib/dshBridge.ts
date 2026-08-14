@@ -6,7 +6,7 @@ export type DshBranchRequest = {
 };
 type DshRequest = DshCreateRequest | DshBranchRequest;
 
-function dshParentOrigin(): string | null {
+export function dshParentOrigin(): string | null {
   if (window.parent === window || !document.referrer) return null;
   try {
     const url = new URL(document.referrer);

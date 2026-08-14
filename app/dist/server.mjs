@@ -409,14 +409,15 @@ function registerNodeRoutes(router, service) {
 var ARTIFACT_TYPES = ["html", "markdown", "svg", "image", "video", "audio"];
 var THEME_PREFERENCES = ["light", "dark", "system"];
 var LOCALES = ["zh-CN", "en", "ja", "es", "de"];
+var LOCALE_PREFERENCES = ["system", ...LOCALES];
 function isArtifactType(value) {
   return typeof value === "string" && ARTIFACT_TYPES.includes(value);
 }
 function isThemePreference(value) {
   return typeof value === "string" && THEME_PREFERENCES.includes(value);
 }
-function isLocale(value) {
-  return typeof value === "string" && LOCALES.includes(value);
+function isLocalePreference(value) {
+  return typeof value === "string" && LOCALE_PREFERENCES.includes(value);
 }
 
 // ../node_modules/marked/lib/marked.esm.js
@@ -2411,8 +2412,8 @@ function registerSettingsRoutes(router, store) {
   });
   router.put("/api/settings/locale", async ({ req, res }) => {
     const { locale } = await readJsonBody(req);
-    if (!isLocale(locale)) {
-      throw new HttpError(400, "locale must be zh-CN, en, ja, es, or de", "INVALID_LOCALE");
+    if (!isLocalePreference(locale)) {
+      throw new HttpError(400, "locale must be system, zh-CN, en, ja, es, or de", "INVALID_LOCALE");
     }
     const settings = store.write({ ...store.read(), locale });
     projectEvents.publishSettings(settings);
@@ -2423,7 +2424,7 @@ function registerSettingsRoutes(router, store) {
 // src/server/settings/settings.store.ts
 import { existsSync as existsSync2, mkdirSync as mkdirSync4, readFileSync as readFileSync3, renameSync as renameSync2, writeFileSync as writeFileSync2 } from "node:fs";
 import { join as join6 } from "node:path";
-var DEFAULT_SETTINGS = { theme: "system", locale: "zh-CN" };
+var DEFAULT_SETTINGS = { theme: "system", locale: "system" };
 var SettingsStore = class {
   file;
   constructor(directory = dataDirectory) {
@@ -2436,7 +2437,7 @@ var SettingsStore = class {
       const value = JSON.parse(readFileSync3(this.file, "utf8"));
       return {
         theme: isThemePreference(value.theme) ? value.theme : DEFAULT_SETTINGS.theme,
-        locale: isLocale(value.locale) ? value.locale : DEFAULT_SETTINGS.locale
+        locale: isLocalePreference(value.locale) ? value.locale : DEFAULT_SETTINGS.locale
       };
     } catch {
       return { ...DEFAULT_SETTINGS };

@@ -5,18 +5,36 @@ import { useI18n } from '../I18nProvider';
 import '../../styles/components/home/HomeComposer.css';
 
 const MAX_PROMPT_LENGTH = 500;
-const CATEGORIES = [
-  ['想法', '把你的想法变成几个方向不同的完整方案'],
-  ['原型', '设计一个可交互的产品原型，探索三种不同的信息架构'],
-  ['落地页', '为一个新产品设计落地页，生成三个风格方向'],
-  ['海报', '设计一张主题海报，探索三种不同的视觉语言'],
-  ['Logo', '为一个新品牌设计 logo，生成三个明显不同的方向'],
-  ['文档', '把这个想法整理成一份结构完整、易读的文档'],
-  ['封面', '设计一个封面，探索三个构图与气质不同的版本'],
-  ['简历', '设计一份清晰而有个性的个人简历'],
-  ['插画', '创作一幅主题插画，生成三个不同艺术方向'],
-  ['邀请函', '设计一张有仪式感的活动邀请函'],
-] as const;
+const HOME_COPY = {
+  'zh-CN': {
+    title: '让一个想法，长成一片创意',
+    subtitle: '写一句话，定好出几版。每一版都是树上独立的一支——挑中最好的那支，继续往下长。',
+    typeAria: '创作类型',
+    generate: (count: number) => `生成 ${count} 份`,
+    note: '使用当前 DSH 会话与模型 · 每一版都会保留在树上',
+    categories: [
+      ['想法', '把你的想法变成几个方向不同的完整方案'], ['原型', '设计一个可交互的产品原型，探索三种不同的信息架构'],
+      ['落地页', '为一个新产品设计落地页，生成三个风格方向'], ['海报', '设计一张主题海报，探索三种不同的视觉语言'],
+      ['Logo', '为一个新品牌设计 logo，生成三个明显不同的方向'], ['文档', '把这个想法整理成一份结构完整、易读的文档'],
+      ['封面', '设计一个封面，探索三个构图与气质不同的版本'], ['简历', '设计一份清晰而有个性的个人简历'],
+      ['插画', '创作一幅主题插画，生成三个不同艺术方向'], ['邀请函', '设计一张有仪式感的活动邀请函'],
+    ],
+  },
+  en: {
+    title: 'Let one idea grow into many',
+    subtitle: 'Describe it, choose how many versions to explore, then grow the strongest branch further.',
+    typeAria: 'Creation type',
+    generate: (count: number) => `Generate ${count}`,
+    note: 'Uses the current DSH session and model · Every version stays on the tree',
+    categories: [
+      ['Idea', 'Turn this idea into several complete and clearly distinct directions'], ['Prototype', 'Design an interactive product prototype with three different information architectures'],
+      ['Landing page', 'Design a product landing page in three distinct visual directions'], ['Poster', 'Design a themed poster in three different visual languages'],
+      ['Logo', 'Design a logo for a new brand in three clearly distinct directions'], ['Document', 'Turn this idea into a complete, readable document'],
+      ['Cover', 'Design three cover versions with different composition and tone'], ['Résumé', 'Design a clear and distinctive personal résumé'],
+      ['Illustration', 'Create a themed illustration in three different artistic directions'], ['Invitation', 'Design an event invitation with a sense of occasion'],
+    ],
+  },
+} as const;
 
 export function HomeComposer({ prompt, promptRef, plant, count, creating, error, onPromptChange, onCountChange, onSubmit }: {
   prompt: string;
@@ -29,20 +47,21 @@ export function HomeComposer({ prompt, promptRef, plant, count, creating, error,
   onCountChange: (value: number) => void;
   onSubmit: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const copy = HOME_COPY[locale === 'en' ? 'en' : 'zh-CN'];
   const [category, setCategory] = useState(0);
   const disabled = !prompt.trim() || creating;
 
   return (
     <header className="bd-head">
       <div className="bd-plant" aria-hidden="true" dangerouslySetInnerHTML={{ __html: plant.svg }} />
-      <h1 className="bd-greet">让一个想法，长成一片创意</h1>
-      <p className="bd-greet-sub">写一句话，定好出几版。每一版都是树上独立的一支——挑中最好的那支，继续往下长。</p>
+      <h1 className="bd-greet">{copy.title}</h1>
+      <p className="bd-greet-sub">{copy.subtitle}</p>
 
       <form className="bd-ticket" onSubmit={(event) => { event.preventDefault(); onSubmit(); }}>
         <section className="bd-ticket-top">
-          <div className="bd-ticket-tabs" role="tablist" aria-label="创作类型">
-            {CATEGORIES.map(([label, template], index) => (
+          <div className="bd-ticket-tabs" role="tablist" aria-label={copy.typeAria}>
+            {copy.categories.map(([label, template], index) => (
               <button key={label} type="button" role="tab" aria-selected={category === index}
                 className={`bd-ticket-tab${category === index ? ' is-selected' : ''}`}
                 onClick={() => {
@@ -72,12 +91,12 @@ export function HomeComposer({ prompt, promptRef, plant, count, creating, error,
             <CountPicker value={count} onChange={onCountChange} />
             <button type="submit" className="bd-start" disabled={disabled}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21V9" /><path d="M12 9c0-4 3-6.5 7-6-.4 4-3 6.7-7 6Z" /><path d="M12 13c0-3-2.4-5.4-5.6-5C6 11.4 8.6 13.8 12 13Z" /></svg>
-              {creating ? t('dsh.sending') : `生成 ${count} 份`}
+              {creating ? t('dsh.sending') : copy.generate(count)}
             </button>
           </div>
         </section>
       </form>
-      <p className="bd-ticket-note">使用当前 DSH 会话与模型 · 每一版都会保留在树上</p>
+      <p className="bd-ticket-note">{copy.note}</p>
       {error && <div className="bd-command-error">{error}</div>}
     </header>
   );

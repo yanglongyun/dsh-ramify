@@ -3,7 +3,7 @@ import { HttpError } from '../http/errors.js';
 import { Router } from '../http/router.js';
 import { sendJson } from '../http/response.js';
 import { projectEvents } from '../realtime/events.js';
-import { isLocale, isThemePreference } from '../../shared/types.js';
+import { isLocalePreference, isThemePreference } from '../../shared/types.js';
 import { SettingsStore } from './settings.store.js';
 
 export function registerSettingsRoutes(router: Router, store: SettingsStore) {
@@ -23,8 +23,8 @@ export function registerSettingsRoutes(router: Router, store: SettingsStore) {
 
   router.put('/api/settings/locale', async ({ req, res }) => {
     const { locale } = await readJsonBody(req);
-    if (!isLocale(locale)) {
-      throw new HttpError(400, 'locale must be zh-CN, en, ja, es, or de', 'INVALID_LOCALE');
+    if (!isLocalePreference(locale)) {
+      throw new HttpError(400, 'locale must be system, zh-CN, en, ja, es, or de', 'INVALID_LOCALE');
     }
     const settings = store.write({ ...store.read(), locale });
     projectEvents.publishSettings(settings);

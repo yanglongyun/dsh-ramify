@@ -1,6 +1,8 @@
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import {
   ramifyWorkspaceOpen,
+  ramifyHostPreferences,
+  ramifyWorkspaceFrame,
   setRamifyWorkspaceFrame,
   setRamifyWorkspaceOpen,
   subscribeRamifyWorkspace,
@@ -45,7 +47,12 @@ function CloseIcon(): ReactNode {
 /** Frame-wide Ramify workspace hosted by the DSH shell overlay slot. */
 export function RamifyWorkspaceOverlay(): ReactNode {
   const open = useSyncExternalStore(subscribeRamifyWorkspace, ramifyWorkspaceOpen, ramifyWorkspaceOpen)
+  const preferences = useSyncExternalStore(subscribeRamifyWorkspace, ramifyHostPreferences, ramifyHostPreferences)
   const [ready, setReady] = useState(false)
+
+  const sendPreferences = (): void => {
+    ramifyWorkspaceFrame()?.postMessage({ type: 'ramify:dsh-preferences', version: 1, ...preferences }, 'http://127.0.0.1:9519')
+  }
 
   useEffect(() => {
     if (!open) return
@@ -56,6 +63,23 @@ export function RamifyWorkspaceOverlay(): ReactNode {
     window.addEventListener('keydown', onKeyDown)
     return () => { window.removeEventListener('keydown', onKeyDown) }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    sendPreferences()
+  }, [open, preferences.locale, preferences.theme])
+
+  useEffect(() => {
+    if (!open) return
+    const onMessage = (event: MessageEvent): void => {
+      const value = event.data as Record<string, unknown> | null
+      if (event.origin !== 'http://127.0.0.1:9519' || event.source !== ramifyWorkspaceFrame()) return
+      if (value?.type !== 'ramify:dsh-preferences-ready' || value.version !== 1) return
+      sendPreferences()
+    }
+    window.addEventListener('message', onMessage)
+    return () => { window.removeEventListener('message', onMessage) }
+  }, [open, preferences.locale, preferences.theme])
 
   if (!open) return null
   return (
@@ -69,7 +93,9 @@ export function RamifyWorkspaceOverlay(): ReactNode {
           </div>
           <div className="ramify-status" aria-live="polite">
             <span className="ramify-status__dot" />
-            {ready ? '工作台已连接' : '正在唤醒工作台'}
+            {preferences.locale === 'en'
+              ? (ready ? 'Workspace connected' : 'Waking workspace')
+              : (ready ? '工作台已连接' : '正在唤醒工作台')}
           </div>
           <div className="ramify-actions">
             <a className="ramify-icon-button" href={RAMIFY_URL} target="_blank" rel="noreferrer" aria-label="在新窗口打开 Ramify" title="在新窗口打开">
@@ -83,7 +109,7 @@ export function RamifyWorkspaceOverlay(): ReactNode {
         <div className="ramify-stage">
           {!ready ? (
             <div className="ramify-loading">
-              <span><span className="ramify-loading__sprout"><RamifyBrandMark size={30} /></span>枝叶正在展开</span>
+              <span><span className="ramify-loading__sprout"><RamifyBrandMark size={30} /></span>{preferences.locale === 'en' ? 'Growing branches' : '枝叶正在展开'}</span>
             </div>
           ) : null}
           <iframe
@@ -91,7 +117,7 @@ export function RamifyWorkspaceOverlay(): ReactNode {
             className={`ramify-frame${ready ? ' ramify-frame--ready' : ''}`}
             src={RAMIFY_URL}
             title="Ramify 工作台"
-            onLoad={() => { setReady(true) }}
+            onLoad={() => { setReady(true); sendPreferences() }}
           />
         </div>
       </section>

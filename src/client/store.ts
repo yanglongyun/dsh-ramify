@@ -1,6 +1,7 @@
 const listeners = new Set<() => void>()
 let open = false
 let workspaceFrame: Window | null = null
+let hostPreferences = { locale: 'zh-CN' as 'zh-CN' | 'en', theme: 'light' as 'light' | 'dark' }
 
 /** Current visibility of the frame-wide Ramify workspace. */
 export function ramifyWorkspaceOpen(): boolean {
@@ -28,4 +29,16 @@ export function setRamifyWorkspaceFrame(frame: Window | null): void {
 /** Exact iframe source used to reject messages from unrelated loopback pages. */
 export function ramifyWorkspaceFrame(): Window | null {
   return workspaceFrame
+}
+
+/** Current DSH presentation preferences forwarded to the embedded canvas. */
+export function ramifyHostPreferences(): typeof hostPreferences {
+  return hostPreferences
+}
+
+/** Publish a native DSH locale/theme snapshot to React and the iframe bridge. */
+export function setRamifyHostPreferences(next: typeof hostPreferences): void {
+  if (hostPreferences.locale === next.locale && hostPreferences.theme === next.theme) return
+  hostPreferences = next
+  for (const listener of listeners) listener()
 }

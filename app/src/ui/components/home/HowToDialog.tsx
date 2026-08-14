@@ -28,6 +28,10 @@ export function HowToDialog({ onClose }: Props) {
         </div>
 
         <div className="bd-how-actions">
+          <a className="is-source" href="https://github.com/yanglongyun/dsh-ramify" target="_blank" rel="noreferrer">
+            {t('how.source')}
+            <span aria-hidden="true">↗</span>
+          </a>
           <button className="is-main" onClick={onClose}>{t('how.ok')}</button>
         </div>
       </section>

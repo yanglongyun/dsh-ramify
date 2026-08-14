@@ -16,6 +16,7 @@ export const de: Messages = {
   'how.command': 'Beispiel: Entwirf drei visuell unterschiedliche, vollständig interaktive Webseiten für einen Pomodoro-Timer.',
   'how.outro': 'Zuerst erscheint pro Richtung ein Generierungs-Knoten. Deine aktuelle DSH-Sitzung und das Modell vervollständigen sie direkt. Für weitere Varianten nutze die Verzweigen-Schaltfläche am Knoten.',
   'how.ok': 'Jetzt erstellen',
+  'how.source': 'Auf GitHub ansehen',
   'empty.aria': 'Kreative Beispiele',
   'empty.landingTitle': 'Deine erste Landingpage',
   'empty.landingMemo': 'Versuche: „Erstelle drei Landingpages für eine Pour-over-Kaffeemarke.“',
