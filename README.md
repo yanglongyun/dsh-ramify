@@ -37,7 +37,7 @@ Ramify 是一个专为 DeepSeek Harness（DSH）开发的 `dsh-plugin`。它把 
 - **可视化分支**：从任意已完成节点继续发散，旧方案保持不变。
 - 安装后自动启动本地画布，不需要单独运行 CLI。
 - HTML、Markdown、SVG、图片、视频和音频作品可直接预览。
-- SQLite 本地持久化与 Server-Sent Events 实时更新。
+- SQLite 本地持久化，前端轻量轮询感知变更。
 - 服务固定绑定 `127.0.0.1`，不接收或存储模型 API Key。
 - 插件卸载时清理自己启动的运行时；已有 Ramify 实例会被复用而不会被关闭。
 
@@ -97,7 +97,7 @@ Ramify UI (DSH overlay iframe)
         ▼
 DSH Client UI 会话桥 ──► 当前 DSH 会话与模型
         │                         │
-        │ SSE 实时更新            │ Ramify tools
+        │ 轻量轮询感知变更        │ Ramify tools
         ▼                         ▼
 本地 Ramify runtime ◄──── 项目、节点与作品
         │

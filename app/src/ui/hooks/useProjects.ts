@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import type { Project } from '../types';
+import { useVersionPolling } from './usePolling';
 
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -12,12 +13,7 @@ export function useProjects() {
     .finally(() => setLoading(false)), []);
 
   useEffect(() => { void reload(); }, [reload]);
-
-  useEffect(() => {
-    const events = new EventSource(api.eventsUrl());
-    events.onmessage = () => { void reload(); };
-    return () => events.close();
-  }, [reload]);
+  useVersionPolling(api.projectsVersion, reload);
 
   return { projects, loading, reload };
 }

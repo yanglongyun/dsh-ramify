@@ -17,6 +17,13 @@ var HttpError = class extends Error {
 function parseTemplate(template) {
   return template.split("/").filter(Boolean).map((segment) => segment.startsWith(":") ? { kind: "parameter", name: segment.slice(1) } : { kind: "literal", value: segment });
 }
+function suppressBody(res) {
+  const end = res.end.bind(res);
+  res.end = ((...args) => {
+    const callback = args.find((arg) => typeof arg === "function");
+    return callback ? end(callback) : end();
+  });
+}
 function matchPath(segments, path) {
   const values = path.split("/").filter(Boolean);
   if (values.length !== segments.length) return null;
@@ -46,10 +53,13 @@ var Router = class {
     this.add("DELETE", template, handler);
   }
   async handle(req, res, path) {
+    const isHead = req.method === "HEAD";
+    const method = isHead ? "GET" : req.method;
     for (const route of this.routes) {
-      if (req.method !== route.method) continue;
+      if (method !== route.method) continue;
       const params = matchPath(route.segments, path);
       if (!params) continue;
+      if (isHead) suppressBody(res);
       await route.handler({ req, res, path, params });
       return true;
     }
@@ -1740,59 +1750,6 @@ function renderArtifact(content, type) {
   return secureDocument(content);
 }
 
-// src/server/realtime/events.ts
-var ProjectEvents = class {
-  clients = /* @__PURE__ */ new Set();
-  constructor() {
-    setInterval(() => this.ping(), 25e3).unref();
-  }
-  connect(req, res) {
-    const projectId = new URL(req.url || "/", "http://localhost").searchParams.get("project");
-    res.writeHead(200, {
-      ...BASE_SECURITY_HEADERS,
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-      "Content-Type": "text/event-stream"
-    });
-    res.write("retry: 2000\n\n");
-    const client = { response: res, projectId };
-    this.clients.add(client);
-    req.on("close", () => this.clients.delete(client));
-  }
-  publish(projectId) {
-    const payload = `data: ${JSON.stringify({ project: projectId })}
-
-`;
-    for (const client of this.clients) {
-      if (!client.projectId || client.projectId === projectId) this.write(client, payload);
-    }
-  }
-  publishAll() {
-    const payload = `data: ${JSON.stringify({ project: null })}
-
-`;
-    for (const client of this.clients) this.write(client, payload);
-  }
-  publishSettings(settings) {
-    const payload = `event: settings
-data: ${JSON.stringify(settings)}
-
-`;
-    for (const client of this.clients) this.write(client, payload);
-  }
-  ping() {
-    for (const client of this.clients) this.write(client, ": ping\n\n");
-  }
-  write(client, payload) {
-    try {
-      client.response.write(payload);
-    } catch {
-      this.clients.delete(client);
-    }
-  }
-};
-var projectEvents = new ProjectEvents();
-
 // src/server/nodes/node.service.ts
 var MEDIA_TYPES = /* @__PURE__ */ new Set(["image", "video", "audio"]);
 function requireTitle(value) {
@@ -1869,7 +1826,6 @@ var NodeService = class {
       this.artifacts.remove(artifact);
       throw error;
     }
-    projectEvents.publish(projectId);
     return { id };
   }
   createBatch(projectId, input) {
@@ -1912,7 +1868,6 @@ var NodeService = class {
         this.projects.touch(projectId);
         return { nodes: created };
       });
-      projectEvents.publish(projectId);
       return result;
     } catch (error) {
       this.artifacts.removeMany(written);
@@ -1941,7 +1896,6 @@ var NodeService = class {
       this.projects.touch(node.project_id);
     });
     if (changesContent) this.artifacts.remove(artifactPath(node));
-    projectEvents.publish(node.project_id);
     return this.requireNode(nodeId);
   }
   updateArtifact(nodeId, input) {
@@ -1964,7 +1918,6 @@ var NodeService = class {
       throw error;
     }
     if (previousPath !== artifact) this.artifacts.remove(previousPath);
-    projectEvents.publish(node.project_id);
     return { ok: true };
   }
   markArtifactError(nodeId, input) {
@@ -1980,7 +1933,6 @@ var NodeService = class {
       this.projects.touch(node.project_id);
     });
     this.artifacts.remove(artifactPath(node));
-    projectEvents.publish(node.project_id);
     return { ok: true };
   }
   clearArtifact(nodeId) {
@@ -1990,7 +1942,6 @@ var NodeService = class {
       this.projects.touch(node.project_id);
     });
     this.artifacts.remove(artifactPath(node));
-    projectEvents.publish(node.project_id);
     return { ok: true };
   }
   delete(nodeId) {
@@ -2003,7 +1954,6 @@ var NodeService = class {
       return count;
     });
     this.artifacts.removeMany(paths);
-    projectEvents.publish(node.project_id);
     return { ok: true, deleted };
   }
   html(nodeId) {
@@ -2078,11 +2028,29 @@ var ProjectRepository = class {
   renameVersionedStatement = database.prepare(`
     UPDATE projects SET title=?, updated_at=strftime('%Y-%m-%d %H:%M:%f','now') WHERE id=? AND updated_at=?
   `);
+  touchAllStatement = database.prepare(`
+    UPDATE projects SET updated_at=strftime('%Y-%m-%d %H:%M:%f','now')
+  `);
+  // 轻量版本标记:项目数量 + 最新 updated_at,足以让前端轮询判断"是否需要重新拉取列表"。
+  listVersionStatement = database.prepare(`
+    SELECT COUNT(*) AS count, COALESCE(MAX(updated_at), '') AS latest FROM projects
+  `);
+  findVersionStatement = database.prepare("SELECT updated_at FROM projects WHERE id=?");
   list() {
     return this.listStatement.all();
   }
   find(id) {
     return this.findStatement.get(id);
+  }
+  listVersion() {
+    const row = this.listVersionStatement.get();
+    return `${row.count}:${row.latest}`;
+  }
+  // 项目自身的 updated_at 已经在每次节点增删改时被 touch(),
+  // 所以它同时就是"该项目 + 其节点树"的版本标记,树轮询直接复用它即可。
+  findVersion(id) {
+    const row = this.findVersionStatement.get(id);
+    return row?.updated_at;
   }
   insert(project) {
     this.insertStatement.run(project.id, project.title, project.prompt);
@@ -2092,6 +2060,9 @@ var ProjectRepository = class {
   }
   touch(id) {
     this.touchStatement.run(id);
+  }
+  touchAll() {
+    this.touchAllStatement.run();
   }
   rename(id, title, expected) {
     const result = expected ? this.renameVersionedStatement.run(title, id, expected) : this.renameStatement.run(title, id);
@@ -2104,6 +2075,9 @@ function registerProjectRoutes(router, service) {
   router.get("/api/projects", ({ res }) => {
     sendJson(res, 200, service.list());
   });
+  router.get("/api/projects/version", ({ res }) => {
+    sendJson(res, 200, { version: service.version() });
+  });
   router.post("/api/projects", async ({ req, res }) => {
     sendJson(res, 200, service.create(await readJsonBody(req)));
   });
@@ -2115,6 +2089,9 @@ function registerProjectRoutes(router, service) {
   });
   router.get("/api/projects/:projectId/tree", ({ res, params }) => {
     sendJson(res, 200, service.tree(params.projectId));
+  });
+  router.get("/api/projects/:projectId/version", ({ res, params }) => {
+    sendJson(res, 200, { version: service.treeVersion(params.projectId) });
   });
 }
 
@@ -2157,7 +2134,6 @@ var ProjectService = class {
         });
       });
     });
-    projectEvents.publish(projectId);
     return { ...this.requireProject(projectId), rootId, nodeIds };
   }
   rename(projectId, input) {
@@ -2168,7 +2144,6 @@ var ProjectService = class {
     if (!this.projects.rename(projectId, title, expected)) {
       throw new HttpError(409, "project changed since it was read", "VERSION_CONFLICT");
     }
-    projectEvents.publish(projectId);
     return this.requireProject(projectId);
   }
   delete(projectId) {
@@ -2178,7 +2153,6 @@ var ProjectService = class {
       this.projects.delete(projectId);
     });
     this.artifacts.removeMany(artifacts);
-    projectEvents.publish(projectId);
     return { ok: true };
   }
   tree(projectId) {
@@ -2191,6 +2165,14 @@ var ProjectService = class {
       nodes
     };
   }
+  version() {
+    return this.projects.listVersion();
+  }
+  treeVersion(projectId) {
+    const version = this.projects.findVersion(projectId);
+    if (version === void 0) throw new HttpError(404, "project not found", "PROJECT_NOT_FOUND");
+    return version;
+  }
   requireProject(projectId) {
     const project = this.projects.find(projectId);
     if (!project) throw new HttpError(404, "project not found", "PROJECT_NOT_FOUND");
@@ -2198,7 +2180,7 @@ var ProjectService = class {
   }
 };
 
-// src/server/realtime/change-watcher.ts
+// src/server/change-watcher.ts
 import { mkdirSync as mkdirSync2, statSync, watch } from "node:fs";
 import { join as join4 } from "node:path";
 var started = false;
@@ -2229,16 +2211,27 @@ function startChangeWatcher() {
   started = true;
   const artifactsDirectory = join4(dataDirectory, "artifacts");
   mkdirSync2(artifactsDirectory, { recursive: true });
+  const projects = new ProjectRepository();
   let databaseRevision = databaseFingerprint();
+  const resyncDatabaseRevision = () => {
+    databaseRevision = databaseFingerprint();
+  };
   setInterval(() => {
     const nextRevision = databaseFingerprint();
     if (nextRevision === databaseRevision) return;
     databaseRevision = nextRevision;
-    debounce("database", () => projectEvents.publishAll());
+    debounce("database", () => {
+      projects.touchAll();
+      resyncDatabaseRevision();
+    });
   }, 250).unref();
   watchers.push(watch(artifactsDirectory, { persistent: false, recursive: true }, (_event, filename) => {
     const projectId = filename ? String(filename).split(/[\\/]/)[0] : "";
-    debounce(`artifact:${projectId}`, () => projectId ? projectEvents.publish(projectId) : projectEvents.publishAll());
+    debounce(`artifact:${projectId}`, () => {
+      if (projectId) projects.touch(projectId);
+      else projects.touchAll();
+      resyncDatabaseRevision();
+    });
   }));
 }
 
@@ -2407,7 +2400,6 @@ function registerSettingsRoutes(router, store) {
       throw new HttpError(400, "theme must be light, dark, or system", "INVALID_THEME");
     }
     const settings = store.write({ ...store.read(), theme });
-    projectEvents.publishSettings(settings);
     sendJson(res, 200, settings);
   });
   router.put("/api/settings/locale", async ({ req, res }) => {
@@ -2416,7 +2408,6 @@ function registerSettingsRoutes(router, store) {
       throw new HttpError(400, "locale must be system, zh-CN, en, ja, es, or de", "INVALID_LOCALE");
     }
     const settings = store.write({ ...store.read(), locale });
-    projectEvents.publishSettings(settings);
     sendJson(res, 200, settings);
   });
 }
@@ -2470,7 +2461,6 @@ function createRequestHandler() {
   registerSettingsRoutes(router, settings);
   registerProjectRoutes(router, new ProjectService(projects, nodes, artifacts));
   registerNodeRoutes(router, new NodeService(nodes, projects, artifacts));
-  router.get("/api/events", ({ req, res }) => projectEvents.connect(req, res));
   return async function handleRequest(req, res) {
     const path = new URL(req.url || "/", "http://localhost").pathname;
     try {

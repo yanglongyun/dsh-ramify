@@ -2,7 +2,6 @@ import { readJsonBody } from '../http/body.js';
 import { HttpError } from '../http/errors.js';
 import { Router } from '../http/router.js';
 import { sendJson } from '../http/response.js';
-import { projectEvents } from '../realtime/events.js';
 import { isLocalePreference, isThemePreference } from '../../shared/types.js';
 import { SettingsStore } from './settings.store.js';
 
@@ -17,7 +16,6 @@ export function registerSettingsRoutes(router: Router, store: SettingsStore) {
       throw new HttpError(400, 'theme must be light, dark, or system', 'INVALID_THEME');
     }
     const settings = store.write({ ...store.read(), theme });
-    projectEvents.publishSettings(settings);
     sendJson(res, 200, settings);
   });
 
@@ -27,7 +25,6 @@ export function registerSettingsRoutes(router: Router, store: SettingsStore) {
       throw new HttpError(400, 'locale must be system, zh-CN, en, ja, es, or de', 'INVALID_LOCALE');
     }
     const settings = store.write({ ...store.read(), locale });
-    projectEvents.publishSettings(settings);
     sendJson(res, 200, settings);
   });
 }

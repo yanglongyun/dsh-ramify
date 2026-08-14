@@ -5,7 +5,6 @@ import { createId, transaction } from '../db/connection.js';
 import { HttpError } from '../http/errors.js';
 import { ARTIFACT_CONTENT_SECURITY_POLICY, MEDIA_CONTENT_SECURITY_POLICY } from '../http/security.js';
 import { ProjectRepository } from '../projects/project.repository.js';
-import { projectEvents } from '../realtime/events.js';
 import type { Node } from './node.types.js';
 import { NodeRepository } from './node.repository.js';
 
@@ -91,7 +90,6 @@ export class NodeService {
       this.artifacts.remove(artifact);
       throw error;
     }
-    projectEvents.publish(projectId);
     return { id };
   }
 
@@ -136,7 +134,6 @@ export class NodeService {
         this.projects.touch(projectId);
         return { nodes: created };
       });
-      projectEvents.publish(projectId);
       return result;
     } catch (error) {
       this.artifacts.removeMany(written);
@@ -166,7 +163,6 @@ export class NodeService {
       this.projects.touch(node.project_id);
     });
     if (changesContent) this.artifacts.remove(artifactPath(node));
-    projectEvents.publish(node.project_id);
     return this.requireNode(nodeId);
   }
 
@@ -190,7 +186,6 @@ export class NodeService {
       throw error;
     }
     if (previousPath !== artifact) this.artifacts.remove(previousPath);
-    projectEvents.publish(node.project_id);
     return { ok: true as const };
   }
 
@@ -207,7 +202,6 @@ export class NodeService {
       this.projects.touch(node.project_id);
     });
     this.artifacts.remove(artifactPath(node));
-    projectEvents.publish(node.project_id);
     return { ok: true as const };
   }
 
@@ -218,7 +212,6 @@ export class NodeService {
       this.projects.touch(node.project_id);
     });
     this.artifacts.remove(artifactPath(node));
-    projectEvents.publish(node.project_id);
     return { ok: true as const };
   }
 
@@ -232,7 +225,6 @@ export class NodeService {
       return count;
     });
     this.artifacts.removeMany(paths);
-    projectEvents.publish(node.project_id);
     return { ok: true as const, deleted };
   }
 

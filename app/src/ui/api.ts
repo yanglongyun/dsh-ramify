@@ -20,6 +20,8 @@ export const api = {
     method: 'PUT', body: JSON.stringify({ locale }),
   }),
   listProjects: () => req<Project[]>('/api/projects'),
+  projectsVersion: () => req<{ version: string }>('/api/projects/version').then((body) => body.version),
+  projectTreeVersion: (id: string) => req<{ version: string }>(`/api/projects/${id}/version`).then((body) => body.version),
   createProject: (prompt: string, count: number) => req<CreatedProject>('/api/projects', {
     method: 'POST', body: JSON.stringify({ prompt, count }),
   }),
@@ -40,7 +42,6 @@ export const api = {
     return `/api/nodes/${nodeId}/html?${query}`;
   },
   nodeArtifactUrl: (nodeId: string) => `/api/nodes/${nodeId}/artifact`,
-  eventsUrl: (projectId?: string) => (projectId ? `/api/events?project=${projectId}` : '/api/events'),
   nodeArtifactSource: async (nodeId: string) => {
     const res = await fetch(`/api/nodes/${nodeId}/artifact/source`);
     const body = await res.json();

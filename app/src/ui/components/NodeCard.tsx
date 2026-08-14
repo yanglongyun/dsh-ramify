@@ -8,7 +8,7 @@ import '../styles/components/NodeCard.css';
 import { isArtifactType } from '../../shared/types';
 import { useI18n } from './I18nProvider';
 
-// 生成中占位:按节点 id 稳定地抽一株图鉴植物(轮询/SSE 刷新不换株)
+// 生成中占位:按节点 id 稳定地抽一株图鉴植物(轮询刷新不换株)
 function plantOf(id: Id) {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;

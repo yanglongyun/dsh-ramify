@@ -17,6 +17,16 @@ function parseTemplate(template: string): RouteSegment[] {
     : { kind: 'literal', value: segment });
 }
 
+// GET 处理函数仍然按平常方式 writeHead + end(body) 收尾;这里劫持 end(),
+// 保留它们已经写好的响应头(含 Content-Length),只是不真的发送 body。
+function suppressBody(res: ServerResponse): void {
+  const end = res.end.bind(res);
+  res.end = ((...args: Parameters<ServerResponse['end']>) => {
+    const callback = args.find((arg): arg is () => void => typeof arg === 'function');
+    return callback ? end(callback) : end();
+  }) as ServerResponse['end'];
+}
+
 function matchPath(segments: RouteSegment[], path: string): Record<string, string> | null {
   const values = path.split('/').filter(Boolean);
   if (values.length !== segments.length) return null;
@@ -53,10 +63,14 @@ export class Router {
   }
 
   async handle(req: IncomingMessage, res: ServerResponse, path: string): Promise<boolean> {
+    // HEAD 复用 GET 路由:匹配同一条路由,但只回响应头、不写响应体。
+    const isHead = req.method === 'HEAD';
+    const method = isHead ? 'GET' : req.method;
     for (const route of this.routes) {
-      if (req.method !== route.method) continue;
+      if (method !== route.method) continue;
       const params = matchPath(route.segments, path);
       if (!params) continue;
+      if (isHead) suppressBody(res);
       await route.handler({ req, res, path, params });
       return true;
     }

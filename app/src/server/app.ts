@@ -10,8 +10,7 @@ import { NodeService } from './nodes/node.service.js';
 import { ProjectRepository } from './projects/project.repository.js';
 import { registerProjectRoutes } from './projects/project.routes.js';
 import { ProjectService } from './projects/project.service.js';
-import { projectEvents } from './realtime/events.js';
-import { startChangeWatcher } from './realtime/change-watcher.js';
+import { startChangeWatcher } from './change-watcher.js';
 import { ArtifactStore } from './artifacts/artifact.store.js';
 import { registerSettingsRoutes } from './settings/settings.routes.js';
 import { SettingsStore } from './settings/settings.store.js';
@@ -34,7 +33,6 @@ export function createRequestHandler() {
   registerSettingsRoutes(router, settings);
   registerProjectRoutes(router, new ProjectService(projects, nodes, artifacts));
   registerNodeRoutes(router, new NodeService(nodes, projects, artifacts));
-  router.get('/api/events', ({ req, res }) => projectEvents.connect(req, res));
 
   return async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     const path = new URL(req.url || '/', 'http://localhost').pathname;

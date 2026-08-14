@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const dataDirectory = mkdtempSync(join(tmpdir(), 'ramify-test-'));
 process.env.RAMIFY_DATA_DIR = dataDirectory;
@@ -101,6 +102,22 @@ test('database constraints preserve the clean node type model', () => {
   assert.throws(() => database.prepare("UPDATE nodes SET type='unknown' WHERE id=?").run(node.id));
   assert.throws(() => database.prepare("UPDATE nodes SET type='error', content=NULL WHERE id=?").run(node.id));
   assert.throws(() => nodeService.delete(project.rootId), (error) => error instanceof HttpError && error.code === 'ROOT_NODE_IMMUTABLE');
+});
+
+test('version markers change on mutation so pollers know to refetch', async () => {
+  const project = projectService.create({ prompt: '轮询测试' });
+  const listVersionBefore = projectService.version();
+  const treeVersionBefore = projectService.treeVersion(project.id);
+
+  // updated_at 精确到毫秒,同一毫秒内两次写入可能得到相同时间戳;
+  // 稍等一下确保这次 touch 落在下一毫秒,断言才不会偶发抖动。
+  await delay(5);
+  nodeService.create(project.id, { parentId: project.rootId, title: '新节点' });
+
+  assert.notEqual(projectService.treeVersion(project.id), treeVersionBefore);
+  assert.notEqual(projectService.version(), listVersionBefore);
+  assert.throws(() => projectService.treeVersion('missing-project'),
+    (error) => error instanceof HttpError && error.code === 'PROJECT_NOT_FOUND');
 });
 
 test.after(() => {

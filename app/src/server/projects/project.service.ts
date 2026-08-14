@@ -1,7 +1,6 @@
 import { createId, transaction } from '../db/connection.js';
 import { HttpError } from '../http/errors.js';
 import { NodeRepository } from '../nodes/node.repository.js';
-import { projectEvents } from '../realtime/events.js';
 import { ArtifactStore } from '../artifacts/artifact.store.js';
 import { ProjectRepository } from './project.repository.js';
 import type { Project } from './project.types.js';
@@ -45,7 +44,6 @@ export class ProjectService {
       });
     });
 
-    projectEvents.publish(projectId);
     return { ...this.requireProject(projectId), rootId, nodeIds };
   }
 
@@ -57,7 +55,6 @@ export class ProjectService {
     if (!this.projects.rename(projectId, title, expected)) {
       throw new HttpError(409, 'project changed since it was read', 'VERSION_CONFLICT');
     }
-    projectEvents.publish(projectId);
     return this.requireProject(projectId);
   }
 
@@ -69,7 +66,6 @@ export class ProjectService {
       this.projects.delete(projectId);
     });
     this.artifacts.removeMany(artifacts);
-    projectEvents.publish(projectId);
     return { ok: true as const };
   }
 
@@ -82,6 +78,16 @@ export class ProjectService {
       project: this.requireProject(projectId),
       nodes,
     };
+  }
+
+  version(): string {
+    return this.projects.listVersion();
+  }
+
+  treeVersion(projectId: string): string {
+    const version = this.projects.findVersion(projectId);
+    if (version === undefined) throw new HttpError(404, 'project not found', 'PROJECT_NOT_FOUND');
+    return version;
   }
 
   private requireProject(projectId: string) {

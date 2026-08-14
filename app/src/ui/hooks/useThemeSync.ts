@@ -54,17 +54,21 @@ export function useSettingsSync() {
   }, []);
 
   useEffect(() => {
-    void api.settings().then(setSettings).catch(console.error);
-    const events = new EventSource(api.eventsUrl());
-    const update = (event: MessageEvent<string>) => {
-      try {
-        setSettings(JSON.parse(event.data) as AppSettings);
-      } catch (error) {
-        console.error(error);
-      }
+    // 设置本身很小(几十字节),没必要为它单独开一条 version 接口,
+    // 直接每秒轮询一次 /api/settings,变了才 setState,免去 SSE 长连接。
+    let cancelled = false;
+    const poll = () => {
+      void api.settings().then((next) => {
+        if (cancelled) return;
+        setSettings((prev) => (prev.theme === next.theme && prev.locale === next.locale ? prev : next));
+      }).catch(console.error);
     };
-    events.addEventListener('settings', update as EventListener);
-    return () => events.close();
+    poll();
+    const timer = setInterval(poll, 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, []);
 
   return { ...settings, locale };
