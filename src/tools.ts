@@ -400,7 +400,7 @@ export function registerRamifyTools(ctx: Context, runtime: RamifyRuntime): void 
       projectId: { type: 'string', required: true },
       nodeId: { type: 'string', required: true },
       artifactType: { type: 'string', required: true, enum: [...ARTIFACT_TYPES] },
-      artifact: { type: 'string', required: true, description: 'Artifact source. Media accepts a matching data URI, HTTPS URL, or loopback URL.' },
+      artifact: { type: 'string', required: true, description: 'Artifact source. May contain executable markup or any media URL supported by the browser.' },
       expectedUpdatedAt: { type: 'string' },
     },
     output: {

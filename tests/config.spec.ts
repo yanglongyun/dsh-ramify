@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { resolveConfig } from '../src/config.js'
 
 describe('resolveConfig', () => {
-  it('supplies safe loopback runtime defaults', () => {
+  it('supplies runtime defaults', () => {
     expect(resolveConfig()).toEqual({
       port: 9519,
       startupTimeoutMs: 5000,

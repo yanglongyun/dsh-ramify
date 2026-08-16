@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import type { ServerResponse } from 'node:http';
 import { extname, join, normalize, relative } from 'node:path';
 import { sendText } from './response.js';
-import { BASE_SECURITY_HEADERS, UI_CONTENT_SECURITY_POLICY } from './security.js';
 
 const DIST = join(process.env.RAMIFY_APP_DIR || process.cwd(), 'dist', 'public');
 const MIME: Record<string, string> = {
@@ -40,12 +39,7 @@ export function serveStatic(res: ServerResponse, requestPath: string) {
     ? 'public, max-age=31536000, immutable'
     : 'no-cache';
   res.writeHead(200, {
-    ...BASE_SECURITY_HEADERS,
-    // The packaged DSH client embeds this trusted local UI in its workspace
-    // surface. The CSP still limits ancestors to loopback DSH pages.
-    'Cross-Origin-Resource-Policy': 'cross-origin',
     'Cache-Control': cacheControl,
-    'Content-Security-Policy': UI_CONTENT_SECURITY_POLICY,
     'Content-Type': contentType.startsWith('text/') ? `${contentType}; charset=utf-8` : contentType,
   });
   res.end(readFileSync(file));

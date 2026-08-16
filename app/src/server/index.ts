@@ -3,7 +3,7 @@ import { createRequestHandler } from './app.js';
 import { initializeSchema } from './db/schema.js';
 
 const PORT = Number(process.env.PORT) || 9519;
-const HOST = process.env.HOST || '127.0.0.1';
+const HOST = process.env.HOST || '0.0.0.0';
 
 initializeSchema();
 

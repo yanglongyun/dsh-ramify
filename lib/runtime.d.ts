@@ -5,7 +5,7 @@ interface RuntimeStatus {
     reused: boolean;
     version: string;
 }
-/** Owns or reuses the loopback Ramify canvas process and its HTTP API. */
+/** Owns or reuses the Ramify canvas process and its HTTP API. */
 export declare class RamifyRuntime {
     private readonly config;
     readonly url: string;

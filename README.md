@@ -38,7 +38,7 @@ Ramify 是一个专为 DeepSeek Harness（DSH）开发的 `dsh-plugin`。它把 
 - 安装后自动启动本地画布，不需要单独运行 CLI。
 - HTML、Markdown、SVG、图片、视频和音频作品可直接预览。
 - SQLite 本地持久化，前端轻量轮询感知变更。
-- 服务固定绑定 `127.0.0.1`，不接收或存储模型 API Key。
+- 不接收或存储模型 API Key。
 - 插件卸载时清理自己启动的运行时；已有 Ramify 实例会被复用而不会被关闭。
 
 ## 环境要求
@@ -67,7 +67,7 @@ dsh plugin --profile web add @ramify/dsh-ramify
 dsh web --port 3099
 ```
 
-启动后点击 DSH 左侧栏底部的 **Ramify**。插件会自动启动绑定在 loopback 的运行时，并把工作台嵌入 DSH 覆层；顶部的外部打开按钮仅作为可选的独立窗口模式。
+启动后点击 DSH 左侧栏底部的 **Ramify**。插件会自动启动运行时，并把工作台嵌入 DSH 覆层；顶部的外部打开按钮仅作为可选的独立窗口模式。
 
 ## 使用
 
@@ -106,7 +106,7 @@ DSH Client UI 会话桥 ──► 当前 DSH 会话与模型
 
 - DSH Web UI：默认 `http://127.0.0.1:3099`
 - Ramify runtime：默认 `http://127.0.0.1:9519`
-- 两个服务都只监听本机；作品 iframe 使用 CSP 明确允许本机 DSH 嵌入。
+- DSH Web UI 与 Ramify runtime 通过 HTTP 连接；作品详情按普通网页完整运行。
 
 ## 配置
 
@@ -127,8 +127,6 @@ DSH Client UI 会话桥 ──► 当前 DSH 会话与模型
 - macOS：`~/Library/Application Support/Ramify/`
 - Windows：`%APPDATA%/Ramify/`
 - Linux：`${XDG_DATA_HOME:-~/.local/share}/ramify/`
-
-服务地址固定为 loopback，这是安全约束，不提供公网绑定配置。
 
 ## 开发
 
@@ -152,12 +150,13 @@ npm run check
 
 浏览器端通过包清单中的 `dsh.client` 声明加载，使用 DSH 提供的侧栏、覆层、工具卡和会话输入插槽，并复用 Harness 提供的 React 运行时。npm 关键字和 GitHub Topic 均包含 **`dsh-plugin`**。
 
-## 数据与安全
+## 数据与作品运行
 
 - 默认数据保存在操作系统应用数据目录，升级或重启不会清空。
 - 插件不读取、不接收也不保存模型 API Key；模型调用由当前 DSH 会话负责。
-- Runtime 默认仅绑定 `127.0.0.1`，并校验 Host，避免意外暴露到公网。
-- Artifact 预览运行在受限 iframe 中，使用独立 CSP 与 sandbox。
+- Runtime 监听 `0.0.0.0:9519`，DSH 默认通过 `127.0.0.1:9519` 访问并管理它。
+- 画布卡片缩略图使用空 `sandbox`，不会运行 JavaScript，避免大量作品同时执行脚本拖慢画布。
+- 右侧详情与新窗口作品不使用 sandbox 或 CSP，可正常运行脚本、加载外部资源、联网和提交表单。
 
 ## 许可证
 

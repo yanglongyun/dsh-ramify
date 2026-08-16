@@ -1,6 +1,5 @@
 import { marked } from 'marked';
 import type { ArtifactType } from '../../shared/types.js';
-import { ARTIFACT_CONTENT_SECURITY_POLICY, MEDIA_CONTENT_SECURITY_POLICY } from '../http/security.js';
 
 const MD_STYLE = `
   :root{color-scheme:light}
@@ -49,22 +48,10 @@ const escapeHtml = (value: string) => value
 
 const escapeAttribute = (value: string) => escapeHtml(value).replace(/"/g, '&quot;');
 
-function secureDocument(document: string, policy = ARTIFACT_CONTENT_SECURITY_POLICY): string {
-  const meta = `<meta http-equiv="Content-Security-Policy" content="${policy}">`;
-  if (/<head(?:\s[^>]*)?>/i.test(document)) {
-    return document.replace(/<head(\s[^>]*)?>/i, (head) => `${head}${meta}`);
-  }
-  if (/<html(?:\s[^>]*)?>/i.test(document)) {
-    return document.replace(/<html(\s[^>]*)?>/i, (html) => `${html}<head>${meta}</head>`);
-  }
-  // 既没有 head 也没有 html —— 作品是片段形式,而这正是我们让 agent 写的形状。
-  // 这里必须保证**文档以 doctype 开头**,否则整篇按 quirks 模式渲染
-  // (百分比高度、行高、表格盒模型全部走另一套规则,作者看到的和写的不是一回事)。
-  // 两种情况都要管:作者写了 doctype —— meta 排到它后面,不能挤到前面去;
-  // 作者没写 —— 我们补一个,而不是把一份 quirks 文档原样端出去。
+function standardsDocument(document: string): string {
   const doctype = /^\s*<!doctype[^>]*>/i.exec(document);
-  if (doctype) return `${doctype[0]}${meta}${document.slice(doctype[0].length)}`;
-  return `<!DOCTYPE html>${meta}${document}`;
+  if (doctype) return document;
+  return `<!DOCTYPE html>${document}`;
 }
 
 export function renderArtifact(content: string, type: ArtifactType): string {
@@ -75,14 +62,14 @@ export function renderArtifact(content: string, type: ArtifactType): string {
       : type === 'video'
         ? `<video src="${source}" controls playsinline preload="metadata"></video>`
         : `<audio src="${source}" controls preload="metadata"></audio>`;
-    return secureDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${MEDIA_STYLE}</style></head><body>${media}</body></html>`, MEDIA_CONTENT_SECURITY_POLICY);
+    return standardsDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${MEDIA_STYLE}</style></head><body>${media}</body></html>`);
   }
   if (type === 'markdown') {
     const body = marked.parse(content, { async: false }) as string;
-    return secureDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${MD_STYLE}</style></head><body><main>${body}</main></body></html>`);
+    return standardsDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${MD_STYLE}</style></head><body><main>${body}</main></body></html>`);
   }
   if (type === 'svg') {
-    return secureDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${SVG_STYLE}</style></head><body>${content}</body></html>`);
+    return standardsDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${SVG_STYLE}</style></head><body>${content}</body></html>`);
   }
-  return secureDocument(content);
+  return standardsDocument(content);
 }

@@ -70,71 +70,9 @@ var Router = class {
   }
 };
 
-// src/server/http/security.ts
-var LOCAL_FRAME_ANCESTORS = "frame-ancestors 'self' http://127.0.0.1:* http://localhost:*";
-var BASE_SECURITY_HEADERS = {
-  "Cross-Origin-Resource-Policy": "same-origin",
-  "Referrer-Policy": "no-referrer",
-  "X-Content-Type-Options": "nosniff"
-};
-var UI_CONTENT_SECURITY_POLICY = [
-  "default-src 'self'",
-  "base-uri 'none'",
-  "connect-src 'self'",
-  "font-src 'self' data:",
-  LOCAL_FRAME_ANCESTORS,
-  "frame-src 'self' data: blob:",
-  "img-src 'self' data: blob:",
-  "object-src 'none'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'"
-].join("; ");
-var ARTIFACT_CONTENT_SECURITY_POLICY = [
-  "default-src 'none'",
-  "base-uri 'none'",
-  "connect-src 'none'",
-  "font-src data:",
-  "form-action 'none'",
-  "frame-src 'none'",
-  "img-src data: blob:",
-  "media-src data: blob:",
-  "object-src 'none'",
-  "script-src 'unsafe-inline'",
-  "style-src 'unsafe-inline'",
-  "worker-src 'none'"
-].join("; ");
-var MEDIA_CONTENT_SECURITY_POLICY = [
-  "default-src 'none'",
-  "base-uri 'none'",
-  "connect-src 'none'",
-  "form-action 'none'",
-  "img-src 'self' https: http://127.0.0.1:* http://localhost:* data: blob:",
-  "media-src 'self' https: http://127.0.0.1:* http://localhost:* data: blob:",
-  "object-src 'none'",
-  "script-src 'none'",
-  "style-src 'unsafe-inline'"
-].join("; ");
-function requestHostname(req) {
-  const host = req.headers.host;
-  if (!host) return null;
-  try {
-    return new URL(`http://${host}`).hostname.toLowerCase().replace(/^\[|\]$/g, "");
-  } catch {
-    return null;
-  }
-}
-function isAllowedHost(req) {
-  const hostname = requestHostname(req);
-  if (!hostname) return false;
-  const configured = (process.env.HOST || "").trim().toLowerCase();
-  const extra = (process.env.RAMIFY_ALLOWED_HOSTS || "").split(",").map((value) => value.trim().toLowerCase()).filter(Boolean);
-  return (/* @__PURE__ */ new Set(["127.0.0.1", "localhost", "::1", configured, ...extra])).has(hostname);
-}
-
 // src/server/http/response.ts
 function sendJson(res, status, body) {
   res.writeHead(status, {
-    ...BASE_SECURITY_HEADERS,
     "Cache-Control": "no-store",
     "Content-Type": "application/json; charset=utf-8"
   });
@@ -142,7 +80,6 @@ function sendJson(res, status, body) {
 }
 function sendText(res, status, body, contentType = "text/plain; charset=utf-8", headers = {}) {
   res.writeHead(status, {
-    ...BASE_SECURITY_HEADERS,
     "Content-Type": contentType,
     "Content-Length": Buffer.byteLength(body),
     ...headers
@@ -151,7 +88,6 @@ function sendText(res, status, body, contentType = "text/plain; charset=utf-8", 
 }
 function sendBuffer(res, body, contentType, headers = {}) {
   res.writeHead(200, {
-    ...BASE_SECURITY_HEADERS,
     "Content-Type": contentType,
     "Content-Length": body.length,
     ...headers
@@ -192,12 +128,7 @@ function serveStatic(res, requestPath) {
   const contentType = MIME[extname(file)] || "application/octet-stream";
   const cacheControl = relative(DIST, file).startsWith("assets") ? "public, max-age=31536000, immutable" : "no-cache";
   res.writeHead(200, {
-    ...BASE_SECURITY_HEADERS,
-    // The packaged DSH client embeds this trusted local UI in its workspace
-    // surface. The CSP still limits ancestors to loopback DSH pages.
-    "Cross-Origin-Resource-Policy": "cross-origin",
     "Cache-Control": cacheControl,
-    "Content-Security-Policy": UI_CONTENT_SECURITY_POLICY,
     "Content-Type": contentType.startsWith("text/") ? `${contentType}; charset=utf-8` : contentType
   });
   res.end(readFileSync(file));
@@ -394,8 +325,7 @@ function registerNodeRoutes(router, service) {
     const artifact = service.html(params.nodeId);
     const revision = new URL(req.url ?? "", "http://127.0.0.1").searchParams.get("revision");
     sendText(res, 200, artifact.document, "text/html; charset=utf-8", {
-      "Cache-Control": revision ? "private, max-age=31536000, immutable" : "no-store",
-      "Content-Security-Policy": `${artifact.policy}; ${LOCAL_FRAME_ANCESTORS}; sandbox allow-scripts`
+      "Cache-Control": revision ? "private, max-age=31536000, immutable" : "no-store"
     });
   });
   router.get("/api/nodes/:nodeId/content", ({ res, params }) => {
@@ -408,9 +338,7 @@ function registerNodeRoutes(router, service) {
     const artifact = service.artifact(params.nodeId);
     sendBuffer(res, artifact.content, artifact.mime, {
       "Cache-Control": "no-store",
-      "Content-Security-Policy": "default-src 'none'; sandbox",
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(artifact.filename)}`,
-      "Cross-Origin-Resource-Policy": "cross-origin"
+      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(artifact.filename)}`
     });
   });
 }
@@ -1722,32 +1650,25 @@ var MEDIA_STYLE = `
 `;
 var escapeHtml = (value) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 var escapeAttribute = (value) => escapeHtml(value).replace(/"/g, "&quot;");
-function secureDocument(document, policy = ARTIFACT_CONTENT_SECURITY_POLICY) {
-  const meta = `<meta http-equiv="Content-Security-Policy" content="${policy}">`;
-  if (/<head(?:\s[^>]*)?>/i.test(document)) {
-    return document.replace(/<head(\s[^>]*)?>/i, (head) => `${head}${meta}`);
-  }
-  if (/<html(?:\s[^>]*)?>/i.test(document)) {
-    return document.replace(/<html(\s[^>]*)?>/i, (html) => `${html}<head>${meta}</head>`);
-  }
+function standardsDocument(document) {
   const doctype = /^\s*<!doctype[^>]*>/i.exec(document);
-  if (doctype) return `${doctype[0]}${meta}${document.slice(doctype[0].length)}`;
-  return `<!DOCTYPE html>${meta}${document}`;
+  if (doctype) return document;
+  return `<!DOCTYPE html>${document}`;
 }
 function renderArtifact(content, type) {
   if (type === "image" || type === "video" || type === "audio") {
     const source = escapeAttribute(content.trim());
     const media = type === "image" ? `<img src="${source}" alt="\u751F\u6210\u7684\u56FE\u7247">` : type === "video" ? `<video src="${source}" controls playsinline preload="metadata"></video>` : `<audio src="${source}" controls preload="metadata"></audio>`;
-    return secureDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${MEDIA_STYLE}</style></head><body>${media}</body></html>`, MEDIA_CONTENT_SECURITY_POLICY);
+    return standardsDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${MEDIA_STYLE}</style></head><body>${media}</body></html>`);
   }
   if (type === "markdown") {
     const body = f.parse(content, { async: false });
-    return secureDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${MD_STYLE}</style></head><body><main>${body}</main></body></html>`);
+    return standardsDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${MD_STYLE}</style></head><body><main>${body}</main></body></html>`);
   }
   if (type === "svg") {
-    return secureDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${SVG_STYLE}</style></head><body>${content}</body></html>`);
+    return standardsDocument(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${SVG_STYLE}</style></head><body>${content}</body></html>`);
   }
-  return secureDocument(content);
+  return standardsDocument(content);
 }
 
 // src/server/nodes/node.service.ts
@@ -1765,23 +1686,9 @@ function positionOf(value, fallback) {
   if (!Number.isInteger(value) || Number(value) < 0) throw new HttpError(400, "position must be a non-negative integer", "INVALID_POSITION");
   return Number(value);
 }
-function mediaSourceIsValid(source, type) {
-  if (!MEDIA_TYPES.has(type)) return true;
-  const value = source.trim();
-  if (value.startsWith(`data:${type}/`)) return true;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:" && ["127.0.0.1", "localhost", "::1"].includes(url.hostname);
-  } catch {
-    return false;
-  }
-}
-function requireArtifactSource(source, type) {
+function requireArtifactSource(source) {
   const value = typeof source === "string" ? source : "";
   if (!value.trim()) throw new HttpError(400, "artifact required", "ARTIFACT_REQUIRED");
-  if (!mediaSourceIsValid(value, type)) {
-    throw new HttpError(400, `${type} artifact must be a matching data URI, HTTPS URL, or loopback URL`, "INVALID_MEDIA_SOURCE");
-  }
   return value;
 }
 function artifactPath(node) {
@@ -1807,7 +1714,7 @@ var NodeService = class {
       throw new HttpError(400, "content cannot be combined with artifactType", "AMBIGUOUS_NODE_CONTENT");
     }
     const id = createId();
-    const source = artifactType && input.artifact !== void 0 ? requireArtifactSource(input.artifact, artifactType) : null;
+    const source = artifactType && input.artifact !== void 0 ? requireArtifactSource(input.artifact) : null;
     const artifact = source && artifactType ? this.artifacts.write(projectId, id, artifactType, source) : null;
     try {
       transaction(() => {
@@ -1850,7 +1757,7 @@ var NodeService = class {
             throw new HttpError(400, `content cannot be combined with artifactType for ${key}`, "AMBIGUOUS_NODE_CONTENT");
           }
           const id = createId();
-          const source = artifactType && item.artifact !== void 0 ? requireArtifactSource(item.artifact, artifactType) : null;
+          const source = artifactType && item.artifact !== void 0 ? requireArtifactSource(item.artifact) : null;
           const artifact = source && artifactType ? this.artifacts.write(projectId, id, artifactType, source) : null;
           if (artifact) written.push(artifact);
           this.nodes.insert({
@@ -1904,7 +1811,7 @@ var NodeService = class {
     const type = input.artifactType;
     const expected = typeof input.expectedUpdatedAt === "string" ? input.expectedUpdatedAt : void 0;
     if (expected && expected !== node.updated_at) throw new HttpError(409, "node changed since it was read", "VERSION_CONFLICT");
-    const artifact = this.artifacts.write(node.project_id, nodeId, type, requireArtifactSource(input.artifact, type));
+    const artifact = this.artifacts.write(node.project_id, nodeId, type, requireArtifactSource(input.artifact));
     const previousPath = artifactPath(node);
     try {
       transaction(() => {
@@ -1962,10 +1869,7 @@ var NodeService = class {
     const path = node.content;
     const mime = this.artifacts.mime(path, type);
     const source = MEDIA_TYPES.has(type) ? mime.startsWith("text/uri-list") ? this.artifacts.readText(path).trim() : `/api/nodes/${node.id}/artifact` : this.artifacts.readText(path);
-    return {
-      document: renderArtifact(source, type),
-      policy: MEDIA_TYPES.has(type) ? MEDIA_CONTENT_SECURITY_POLICY : ARTIFACT_CONTENT_SECURITY_POLICY
-    };
+    return { document: renderArtifact(source, type) };
   }
   content(nodeId) {
     const node = this.requireNode(nodeId);
@@ -2464,7 +2368,6 @@ function createRequestHandler() {
   return async function handleRequest(req, res) {
     const path = new URL(req.url || "/", "http://localhost").pathname;
     try {
-      if (!isAllowedHost(req)) throw new HttpError(403, "host is not allowed", "HOST_NOT_ALLOWED");
       if (path.startsWith("/api/")) {
         if (!await router.handle(req, res, path)) sendJson(res, 404, { error: "not found", code: "ROUTE_NOT_FOUND" });
         return;
@@ -2516,7 +2419,7 @@ function initializeSchema() {
 
 // src/server/index.ts
 var PORT = Number(process.env.PORT) || 9519;
-var HOST = process.env.HOST || "127.0.0.1";
+var HOST = process.env.HOST || "0.0.0.0";
 initializeSchema();
 createServer(createRequestHandler()).listen(PORT, HOST, () => {
   console.log(`[dsh-ramify] canvas on http://${HOST}:${PORT}`);

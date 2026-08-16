@@ -66,7 +66,7 @@ export function PreviewPanel({ node, seq, onClose, onToast }: Props) {
       </div>}
       {hasArtifact && <div className="cb-preview-frame-shell">
         <iframe key={`${node.id}:${frameRevision}`} className="cb-preview-frame"
-          src={api.nodeHtmlUrl(node.id, frameRevision)} sandbox="allow-scripts" referrerPolicy="no-referrer"
+          src={api.nodeHtmlUrl(node.id, frameRevision)}
           title={node.title} onLoad={() => setLoadState('ready')} onError={() => setLoadState('failed')} />
         {loadState === 'loading' && <div className="cb-preview-loading" aria-live="polite">{t('preview.loading')}</div>}
         {loadState === 'failed' && <div className="cb-preview-loading is-failed" role="alert">

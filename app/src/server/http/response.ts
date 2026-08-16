@@ -1,9 +1,7 @@
 import type { ServerResponse } from 'node:http';
-import { BASE_SECURITY_HEADERS } from './security.js';
 
 export function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.writeHead(status, {
-    ...BASE_SECURITY_HEADERS,
     'Cache-Control': 'no-store',
     'Content-Type': 'application/json; charset=utf-8',
   });
@@ -18,7 +16,6 @@ export function sendText(
   headers: Record<string, string | number> = {},
 ) {
   res.writeHead(status, {
-    ...BASE_SECURITY_HEADERS,
     'Content-Type': contentType,
     'Content-Length': Buffer.byteLength(body),
     ...headers,
@@ -33,7 +30,6 @@ export function sendBuffer(
   headers: Record<string, string | number> = {},
 ) {
   res.writeHead(200, {
-    ...BASE_SECURITY_HEADERS,
     'Content-Type': contentType,
     'Content-Length': body.length,
     ...headers,

@@ -34,7 +34,7 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-/** Owns or reuses the loopback Ramify canvas process and its HTTP API. */
+/** Owns or reuses the Ramify canvas process and its HTTP API. */
 export class RamifyRuntime {
   readonly url: string
   private child?: ChildProcess
@@ -114,7 +114,7 @@ export class RamifyRuntime {
       cwd: appDirectory,
       env: {
         ...process.env,
-        HOST: '127.0.0.1',
+        HOST: '0.0.0.0',
         PORT: String(this.config.port),
         RAMIFY_APP_DIR: appDirectory,
         RAMIFY_INSTANCE_ID: instanceId,

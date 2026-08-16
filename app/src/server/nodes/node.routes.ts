@@ -1,7 +1,6 @@
 import { readJsonBody } from '../http/body.js';
 import { Router } from '../http/router.js';
 import { sendBuffer, sendJson, sendText } from '../http/response.js';
-import { LOCAL_FRAME_ANCESTORS } from '../http/security.js';
 import { NodeService } from './node.service.js';
 
 export function registerNodeRoutes(router: Router, service: NodeService) {
@@ -38,7 +37,6 @@ export function registerNodeRoutes(router: Router, service: NodeService) {
     const revision = new URL(req.url ?? '', 'http://127.0.0.1').searchParams.get('revision');
     sendText(res, 200, artifact.document, 'text/html; charset=utf-8', {
       'Cache-Control': revision ? 'private, max-age=31536000, immutable' : 'no-store',
-      'Content-Security-Policy': `${artifact.policy}; ${LOCAL_FRAME_ANCESTORS}; sandbox allow-scripts`,
     });
   });
 
@@ -54,9 +52,7 @@ export function registerNodeRoutes(router: Router, service: NodeService) {
     const artifact = service.artifact(params.nodeId);
     sendBuffer(res, artifact.content, artifact.mime, {
       'Cache-Control': 'no-store',
-      'Content-Security-Policy': "default-src 'none'; sandbox",
       'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(artifact.filename)}`,
-      'Cross-Origin-Resource-Policy': 'cross-origin',
     });
   });
 }

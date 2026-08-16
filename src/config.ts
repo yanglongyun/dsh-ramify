@@ -2,7 +2,7 @@ import Schema from '@deepseek-ai/schemastery'
 
 /** Deployment configuration for the Ramify runtime owned by this plugin. */
 export interface Config {
-  /** Loopback TCP port used by the canvas and its local API. */
+  /** TCP port used by the canvas and its API. */
   port?: number
   /** Optional data directory; platform-specific Ramify storage is used when omitted. */
   dataDir?: string
@@ -14,7 +14,7 @@ export interface Config {
 
 /** Cordis configuration schema for the Ramify plugin. */
 export const Config: Schema<Config> = Schema.object({
-  port: Schema.number().default(9519).description('Loopback TCP port for the Ramify canvas.'),
+  port: Schema.number().default(9519).description('TCP port for the Ramify canvas.'),
   dataDir: Schema.string().description('Optional Ramify data directory.'),
   startupTimeoutMs: Schema.number().default(5000).description('Canvas startup timeout in milliseconds.'),
   shutdownTimeoutMs: Schema.number().default(3000).description('Canvas shutdown grace period in milliseconds.'),

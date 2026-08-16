@@ -80,7 +80,7 @@ test('stores artifact paths in content and derives state from type plus content'
   }), (error) => error instanceof HttpError && error.code === 'AMBIGUOUS_NODE_CONTENT');
 });
 
-test('decodes local media, stores remote references, and validates media sources', () => {
+test('decodes local media and stores unrestricted remote references', () => {
   const project = projectService.create({ prompt: '媒体测试' });
   const audio = nodeService.create(project.id, {
     parentId: project.rootId, title: '音频', artifactType: 'audio', artifact: 'data:audio/mpeg;base64,AAAA',
@@ -92,8 +92,10 @@ test('decodes local media, stores remote references, and validates media sources
     parentId: project.rootId, title: '图片', artifactType: 'image', artifact: 'https://cdn.example/poster.webp',
   });
   assert.equal(nodes.find(image.id)?.content, `${project.id}/${image.id}.url`);
-  assert.throws(() => nodeService.create(project.id, { parentId: project.rootId, title: '坏视频', artifactType: 'video', artifact: 'sk-secret' }),
-    (error) => error instanceof HttpError && error.code === 'INVALID_MEDIA_SOURCE');
+  const unrestricted = nodeService.create(project.id, {
+    parentId: project.rootId, title: '自定义视频来源', artifactType: 'video', artifact: 'http://media.example/demo.mp4',
+  });
+  assert.equal(nodes.find(unrestricted.id)?.content, `${project.id}/${unrestricted.id}.url`);
 });
 
 test('database constraints preserve the clean node type model', () => {

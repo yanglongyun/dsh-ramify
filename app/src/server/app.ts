@@ -3,7 +3,6 @@ import { HttpError } from './http/errors.js';
 import { Router } from './http/router.js';
 import { sendJson } from './http/response.js';
 import { serveStatic } from './http/static.js';
-import { isAllowedHost } from './http/security.js';
 import { NodeRepository } from './nodes/node.repository.js';
 import { registerNodeRoutes } from './nodes/node.routes.js';
 import { NodeService } from './nodes/node.service.js';
@@ -37,7 +36,6 @@ export function createRequestHandler() {
   return async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     const path = new URL(req.url || '/', 'http://localhost').pathname;
     try {
-      if (!isAllowedHost(req)) throw new HttpError(403, 'host is not allowed', 'HOST_NOT_ALLOWED');
       if (path.startsWith('/api/')) {
         if (!await router.handle(req, res, path)) sendJson(res, 404, { error: 'not found', code: 'ROUTE_NOT_FOUND' });
         return;

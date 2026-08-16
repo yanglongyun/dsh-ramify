@@ -3,7 +3,6 @@ import { ArtifactStore } from '../artifacts/artifact.store.js';
 import { renderArtifact } from '../artifacts/render.js';
 import { createId, transaction } from '../db/connection.js';
 import { HttpError } from '../http/errors.js';
-import { ARTIFACT_CONTENT_SECURITY_POLICY, MEDIA_CONTENT_SECURITY_POLICY } from '../http/security.js';
 import { ProjectRepository } from '../projects/project.repository.js';
 import type { Node } from './node.types.js';
 import { NodeRepository } from './node.repository.js';
@@ -26,25 +25,9 @@ function positionOf(value: unknown, fallback: number): number {
   return Number(value);
 }
 
-function mediaSourceIsValid(source: string, type: ArtifactType): boolean {
-  if (!MEDIA_TYPES.has(type)) return true;
-  const value = source.trim();
-  if (value.startsWith(`data:${type}/`)) return true;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:'
-      || (url.protocol === 'http:' && ['127.0.0.1', 'localhost', '::1'].includes(url.hostname));
-  } catch {
-    return false;
-  }
-}
-
-function requireArtifactSource(source: unknown, type: ArtifactType): string {
+function requireArtifactSource(source: unknown): string {
   const value = typeof source === 'string' ? source : '';
   if (!value.trim()) throw new HttpError(400, 'artifact required', 'ARTIFACT_REQUIRED');
-  if (!mediaSourceIsValid(value, type)) {
-    throw new HttpError(400, `${type} artifact must be a matching data URI, HTTPS URL, or loopback URL`, 'INVALID_MEDIA_SOURCE');
-  }
   return value;
 }
 
@@ -71,7 +54,7 @@ export class NodeService {
       throw new HttpError(400, 'content cannot be combined with artifactType', 'AMBIGUOUS_NODE_CONTENT');
     }
     const id = createId();
-    const source = artifactType && input.artifact !== undefined ? requireArtifactSource(input.artifact, artifactType) : null;
+    const source = artifactType && input.artifact !== undefined ? requireArtifactSource(input.artifact) : null;
     const artifact = source && artifactType ? this.artifacts.write(projectId, id, artifactType, source) : null;
     try {
       transaction(() => {
@@ -116,7 +99,7 @@ export class NodeService {
             throw new HttpError(400, `content cannot be combined with artifactType for ${key}`, 'AMBIGUOUS_NODE_CONTENT');
           }
           const id = createId();
-          const source = artifactType && item.artifact !== undefined ? requireArtifactSource(item.artifact, artifactType) : null;
+          const source = artifactType && item.artifact !== undefined ? requireArtifactSource(item.artifact) : null;
           const artifact = source && artifactType ? this.artifacts.write(projectId, id, artifactType, source) : null;
           if (artifact) written.push(artifact);
           this.nodes.insert({
@@ -172,7 +155,7 @@ export class NodeService {
     const type = input.artifactType;
     const expected = typeof input.expectedUpdatedAt === 'string' ? input.expectedUpdatedAt : undefined;
     if (expected && expected !== node.updated_at) throw new HttpError(409, 'node changed since it was read', 'VERSION_CONFLICT');
-    const artifact = this.artifacts.write(node.project_id, nodeId, type, requireArtifactSource(input.artifact, type));
+    const artifact = this.artifacts.write(node.project_id, nodeId, type, requireArtifactSource(input.artifact));
     const previousPath = artifactPath(node);
     try {
       transaction(() => {
@@ -236,10 +219,7 @@ export class NodeService {
     const source = MEDIA_TYPES.has(type)
       ? mime.startsWith('text/uri-list') ? this.artifacts.readText(path).trim() : `/api/nodes/${node.id}/artifact`
       : this.artifacts.readText(path);
-    return {
-      document: renderArtifact(source, type),
-      policy: MEDIA_TYPES.has(type) ? MEDIA_CONTENT_SECURITY_POLICY : ARTIFACT_CONTENT_SECURITY_POLICY,
-    };
+    return { document: renderArtifact(source, type) };
   }
 
   content(nodeId: string) {

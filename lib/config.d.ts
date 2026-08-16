@@ -1,7 +1,7 @@
 import Schema from '@deepseek-ai/schemastery';
 /** Deployment configuration for the Ramify runtime owned by this plugin. */
 export interface Config {
-    /** Loopback TCP port used by the canvas and its local API. */
+    /** TCP port used by the canvas and its API. */
     port?: number;
     /** Optional data directory; platform-specific Ramify storage is used when omitted. */
     dataDir?: string;
